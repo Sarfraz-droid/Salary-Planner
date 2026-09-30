@@ -1,0 +1,38 @@
+export type BucketId = "needs" | "wants" | "savings";
+
+export interface Item {
+  id: string;
+  name: string;
+  amount: number;
+  bucket: BucketId;
+  paid: boolean;
+}
+
+export interface Plan {
+  v: 1;
+  name: string;
+  currency: string;
+  salary: number;
+  items: Item[];
+}
+
+export const BUCKETS: {
+  id: BucketId;
+  label: string;
+  hint: string;
+  target: number; // suggested share of salary (50/30/20)
+  emoji: string;
+}[] = [
+  { id: "needs", label: "Needs", hint: "Rent, food, bills, EMI", target: 0.5, emoji: "🏠" },
+  { id: "wants", label: "Wants", hint: "Outings, shopping, fun", target: 0.3, emoji: "🎉" },
+  { id: "savings", label: "Savings", hint: "SIP, emergency fund, debt", target: 0.2, emoji: "🌱" },
+];
+
+export const CURRENCIES = [
+  { code: "INR", label: "₹ Rupee", locale: "en-IN" },
+  { code: "USD", label: "$ Dollar", locale: "en-US" },
+  { code: "EUR", label: "€ Euro", locale: "de-DE" },
+  { code: "GBP", label: "£ Pound", locale: "en-GB" },
+  { code: "PKR", label: "₨ Pak Rupee", locale: "en-PK" },
+  { code: "BDT", label: "৳ Taka", locale: "en-BD" },
+];

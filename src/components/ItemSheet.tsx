@@ -1,0 +1,91 @@
+import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { currencySymbol } from "@/lib/format";
+import { uid } from "@/lib/plan";
+import { BUCKETS, type BucketId, type Item } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  item: Item | null; // null = new
+  defaultBucket: BucketId;
+  currency: string;
+  onSave: (item: Item) => void;
+  onDelete: (id: string) => void;
+}
+
+export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, onSave, onDelete }: Props) {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [bucket, setBucket] = useState<BucketId>(defaultBucket);
+
+  useEffect(() => {
+    if (!open) return;
+    setName(item?.name ?? "");
+    setAmount(item ? String(item.amount) : "");
+    setBucket(item?.bucket ?? defaultBucket);
+  }, [open, item, defaultBucket]);
+
+  const valid = name.trim().length > 0 && Number(amount) > 0;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent title={item ? "Edit expense" : "Add expense"}>
+        <form
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!valid) return;
+            onSave({ id: item?.id ?? uid(), name: name.trim(), amount: Number(amount), bucket, paid: item?.paid ?? false });
+            onOpenChange(false);
+          }}
+        >
+          <div className="space-y-2">
+            <Label htmlFor="name">What is it for?</Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Rent, SIP, Netflix…" autoComplete="off" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount ({currencySymbol(currency)})</Label>
+            <Input id="amount" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} placeholder="0" className="tabular text-xl font-semibold" />
+          </div>
+          <div className="space-y-2">
+            <Label>Bucket</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {BUCKETS.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => setBucket(b.id)}
+                  aria-pressed={bucket === b.id}
+                  className={cn(
+                    "rounded-xl border-2 bg-card px-2 py-3 text-center outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    bucket === b.id ? "text-foreground" : "border-transparent text-muted-foreground",
+                  )}
+                  style={bucket === b.id ? { borderColor: `var(--${b.id})` } : undefined}
+                >
+                  <div className="text-xl">{b.emoji}</div>
+                  <div className="text-sm font-semibold">{b.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-3 pt-1">
+            {item && (
+              <Button type="button" variant="destructive" size="icon" aria-label="Delete" onClick={() => { onDelete(item.id); onOpenChange(false); }}>
+                <Trash2 />
+              </Button>
+            )}
+            <Button type="submit" size="lg" className="flex-1" disabled={!valid}>
+              {item ? "Save changes" : "Add to budget"}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
+  );
+}
