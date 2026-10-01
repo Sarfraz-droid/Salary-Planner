@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AmountPicker } from "@/components/AmountPicker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -44,9 +45,9 @@ export function SetupSheet({ open, onOpenChange, plan, onSave }: Props) {
             onOpenChange(false);
           }}
         >
-          <div className="space-y-2">
-            <Label htmlFor="salary">Monthly take-home salary ({currencySymbol(currency)})</Label>
-            <Input id="salary" inputMode="numeric" autoFocus value={salary} onChange={(e) => setSalary(e.target.value.replace(/[^\d]/g, ""))} placeholder="50000" className="tabular text-2xl font-semibold h-14" />
+          <div className="space-y-1">
+            <Label>Monthly take-home salary</Label>
+            <AmountPicker value={salary} onChange={setSalary} currency={currency} steps={[1000, 5000, 10000, 25000]} />
           </div>
           <div className="space-y-2">
             <Label>Currency</Label>
@@ -88,9 +89,11 @@ export function SetupSheet({ open, onOpenChange, plan, onSave }: Props) {
               </span>
             </button>
           )}
-          <Button type="submit" size="lg" className="w-full" disabled={!valid}>
-            {fresh ? "Create my budget" : "Save"}
-          </Button>
+          <div className="sticky bottom-0 -mx-5 bg-background px-5 pb-1 pt-3">
+            <Button type="submit" size="lg" className="w-full" disabled={!valid}>
+              {fresh ? "Create my budget" : "Save"}
+            </Button>
+          </div>
         </form>
       </SheetContent>
     </Sheet>

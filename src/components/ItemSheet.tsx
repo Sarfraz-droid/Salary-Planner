@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AmountPicker } from "@/components/AmountPicker";
+import { PRESETS } from "@/lib/presets";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -56,14 +58,28 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
             onOpenChange(false);
           }}
         >
+          {!item && (
+            <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label="Quick picks">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.name}
+                  type="button"
+                  onClick={() => { setName(p.name); setBucket(p.bucket); setIcon(null); }}
+                  className={cn(
+                    "h-9 shrink-0 rounded-full border px-4 text-sm font-medium outline-none transition-transform active:scale-95 focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    name === p.name ? "border-primary bg-primary text-primary-foreground" : "bg-card",
+                  )}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="name">What is it for?</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Rent, SIP, Netflix…" autoComplete="off" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount ({currencySymbol(currency)})</Label>
-            <Input id="amount" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ""))} placeholder="0" className="tabular text-xl font-semibold" />
-          </div>
+          <AmountPicker value={amount} onChange={setAmount} currency={currency} />
           <div className="space-y-2">
             <Label>Bucket</Label>
             <div className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
@@ -125,7 +141,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
               <Switch checked={locked} onCheckedChange={setLocked} />
             </label>
           )}
-          <div className="flex gap-3 pt-1">
+          <div className="sticky bottom-0 -mx-5 flex gap-3 bg-background px-5 pb-1 pt-3">
             {item && (
               <Button type="button" variant="destructive" size="icon" aria-label="Delete" onClick={() => { onDelete(item.id); onOpenChange(false); }}>
                 <Trash2 />

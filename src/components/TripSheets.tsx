@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AmountPicker } from "@/components/AmountPicker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -91,7 +92,7 @@ export function TripSheet({ open, onOpenChange, trip, currency, onSave, onDelete
               <Input id="tsaved" inputMode="numeric" value={saved} onChange={(e) => setSaved(digits(e.target.value))} placeholder="0" className="tabular" />
             </div>
           </div>
-          <div className="flex gap-3 pt-1">
+          <div className="sticky bottom-0 -mx-5 flex gap-3 bg-background px-5 pb-1 pt-3">
             {trip && (
               <Button type="button" variant="destructive" size="icon" aria-label="Delete trip" onClick={() => { if (confirm(`Delete “${trip.name}”?`)) { onDelete(trip.id); onOpenChange(false); } }}>
                 <Trash2 />
@@ -164,11 +165,8 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
             <Label htmlFor="iname">What is it?</Label>
             <Input id="iname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Hotel, train tickets, dinner…" autoComplete="off" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="iamount">Amount ({currencySymbol(currency)})</Label>
-            <Input id="iamount" inputMode="numeric" value={amount} onChange={(e) => setAmount(digits(e.target.value))} placeholder="0" className="tabular text-xl font-semibold" />
-          </div>
-          <div className="flex gap-3 pt-1">
+          <AmountPicker value={amount} onChange={setAmount} currency={currency} steps={[500, 1000, 2000, 5000, 10000]} />
+          <div className="sticky bottom-0 -mx-5 flex gap-3 bg-background px-5 pb-1 pt-3">
             {item && (
               <Button type="button" variant="destructive" size="icon" aria-label="Delete" onClick={() => { onDelete(item.id); onOpenChange(false); }}>
                 <Trash2 />
