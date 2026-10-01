@@ -33,6 +33,34 @@ export function starterPlan(salary: number, currency = "INR"): Plan {
   };
 }
 
+/**
+ * Auto-balance: keep the plan summing to the salary. Locked (fixed) and paid items
+ * keep their amounts; the rest share what remains, in proportion to their current size.
+ */
+export function rebalance(plan: Plan): Plan {
+  const flex = plan.items.filter((i) => !i.locked && !i.paid);
+  if (!flex.length || plan.salary <= 0) return plan;
+
+  const fixed = plan.items.reduce((n, i) => (flex.includes(i) ? n : n + i.amount), 0);
+  const pool = Math.max(0, plan.salary - fixed);
+  const weight = flex.reduce((n, i) => n + i.amount, 0);
+  const step = plan.salary >= 10000 ? 10 : 1;
+
+  const raw = flex.map((i) => (weight > 0 ? (pool * i.amount) / weight : pool / flex.length));
+  const out = raw.map((r) => Math.floor(r / step) * step);
+  let rem = pool - out.reduce((n, v) => n + v, 0);
+  // Hand the rounding leftovers out, largest fractional part first.
+  const order = raw.map((r, k) => k).sort((a, b) => raw[b] - out[b] - (raw[a] - out[a]));
+  for (let k = 0; rem > 0; k = (k + 1) % order.length) {
+    const give = Math.min(step, rem);
+    out[order[k]] += give;
+    rem -= give;
+  }
+
+  const next = new Map(flex.map((i, k) => [i.id, out[k]]));
+  return { ...plan, items: plan.items.map((i) => (next.has(i.id) ? { ...i, amount: next.get(i.id)! } : i)) };
+}
+
 export function totals(plan: Plan) {
   const byBucket: Record<BucketId, number> = { needs: 0, wants: 0, savings: 0 };
   let paid = 0;
@@ -87,7 +115,9 @@ export function sanitize(raw: unknown): Plan | null {
       bucket: buckets.includes(i.bucket) ? i.bucket : "needs",
       paid: !!i.paid,
       icon: typeof i.icon === "string" ? i.icon.slice(0, 20) : undefined,
+      locked: !!i.locked,
     })),
+    auto: !!r.auto,
     trips: Array.isArray(r.trips) ? r.trips.slice(0, 30).map(sanitizeTrip) : [],
   };
 }

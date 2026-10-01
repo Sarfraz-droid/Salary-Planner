@@ -10,7 +10,7 @@ import { SetupSheet } from "@/components/SetupSheet";
 import { ShareSheet } from "@/components/ShareSheet";
 import { Trips } from "@/components/Trips";
 import { Summary } from "@/components/Summary";
-import { starterPlan } from "@/lib/plan";
+import { rebalance, starterPlan } from "@/lib/plan";
 import { readSharedPlan } from "@/lib/share";
 import { usePlan } from "@/lib/usePlan";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,9 @@ import { totals } from "@/lib/plan";
 import { BUCKETS, type Item, type Plan } from "@/lib/types";
 
 export default function App() {
-  const { plan: mine, setPlan, update } = usePlan();
+  const { plan: mine, setPlan, update: rawUpdate } = usePlan();
+  /** Item edits go through here so auto-balance can re-fit the plan. */
+  const update = (fn: (p: Plan) => Plan) => rawUpdate((p) => { const n = fn(p); return n.auto ? rebalance(n) : n; });
   const [shared, setShared] = useState<Plan | null>(() => readSharedPlan());
   const plan = shared ?? mine;
   const readOnly = !!shared;
@@ -30,7 +32,7 @@ export default function App() {
   const [setupOpen, setSetupOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);
-  const [undo, setUndo] = useState<{ item: Item; index: number } | null>(null);
+  const [undo, setUndo] = useState<{ name: string; items: Item[] } | null>(null);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
@@ -66,15 +68,15 @@ export default function App() {
   const sums = useMemo(() => totals(plan).byBucket, [plan]);
 
   function deleteItem(id: string) {
-    const index = mine.items.findIndex((i) => i.id === id);
-    if (index < 0) return;
-    setUndo({ item: mine.items[index], index });
+    const item = mine.items.find((i) => i.id === id);
+    if (!item) return;
+    setUndo({ name: item.name, items: mine.items });
     update((p) => ({ ...p, items: p.items.filter((i) => i.id !== id) }));
   }
   function undoDelete() {
     if (!undo) return;
-    const { item, index } = undo;
-    update((p) => ({ ...p, items: [...p.items.slice(0, index), item, ...p.items.slice(index)] }));
+    const snapshot = undo.items;
+    rawUpdate((p) => ({ ...p, items: snapshot }));
     setUndo(null);
   }
 
@@ -123,7 +125,7 @@ export default function App() {
       )}
 
       {view === "trips" ? (
-        <Trips plan={plan} readOnly={readOnly} update={update} />
+        <Trips plan={plan} readOnly={readOnly} update={rawUpdate} />
       ) : plan.salary === 0 && !readOnly ? (
         <div className="mt-10 rounded-xl border border-dashed p-8 text-center">
           <p className="font-display text-xl font-bold">Every rupee needs a job.</p>
@@ -133,7 +135,7 @@ export default function App() {
       ) : (
         <>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <Summary plan={plan} onEdit={readOnly ? undefined : () => setSetupOpen(true)} onInsights={() => setInsightsOpen(true)} />
+          <Summary plan={plan} onEdit={readOnly ? undefined : () => setSetupOpen(true)} onInsights={() => setInsightsOpen(true)} onToggleAuto={readOnly ? undefined : (v) => update((p) => ({ ...p, auto: v }))} />
           </motion.div>
 
           <div className="mt-8 space-y-7">
@@ -160,6 +162,7 @@ export default function App() {
                           item={item}
                           currency={plan.currency}
                           readOnly={readOnly}
+                          showLock={!!plan.auto}
                           onToggle={() => update((p) => ({ ...p, items: p.items.map((i) => (i.id === item.id ? { ...i, paid: !i.paid } : i)) }))}
                           onEdit={() => openEdit(item)}
                           onDelete={() => deleteItem(item.id)}
@@ -204,6 +207,7 @@ export default function App() {
         item={editing}
         defaultBucket="needs"
         currency={plan.currency}
+        auto={!!mine.auto}
         onSave={(item) =>
           update((p) => ({
             ...p,
@@ -217,11 +221,11 @@ export default function App() {
         onOpenChange={setSetupOpen}
         plan={mine}
         onSave={(v, useStarter) =>
-          setPlan((p) => (useStarter ? { ...starterPlan(v.salary, v.currency), name: v.name, trips: p.trips } : { ...p, ...v }))
+          update((p) => (useStarter ? { ...starterPlan(v.salary, v.currency), name: v.name, trips: p.trips } : { ...p, ...v }))
         }
       />
       <Analytics open={insightsOpen} onOpenChange={setInsightsOpen} plan={plan} />
-      <Toast message={undo ? `Deleted “${undo.item.name}”` : null} onUndo={undoDelete} onDone={() => setUndo(null)} />
+      <Toast message={undo ? `Deleted “${undo.name}”` : null} onUndo={undoDelete} onDone={() => setUndo(null)} />
       <ShareSheet open={shareOpen} onOpenChange={setShareOpen} plan={mine} />
     </div>
     </MotionConfig>

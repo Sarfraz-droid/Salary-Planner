@@ -7,6 +7,8 @@ export interface Item {
   bucket: BucketId;
   paid: boolean;
   icon?: string;
+  /** Fixed amount: auto-balance never changes it. */
+  locked?: boolean;
 }
 
 export type TripCat = "stay" | "food" | "transport" | "activities" | "shopping" | "other";
@@ -36,6 +38,8 @@ export interface Plan {
   salary: number;
   items: Item[];
   trips?: Trip[];
+  /** Auto-balance: unlocked items flex so the plan always uses the whole salary. */
+  auto?: boolean;
 }
 
 export const BUCKETS: {

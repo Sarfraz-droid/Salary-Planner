@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
-import { ChevronRight, Pencil } from "lucide-react";
+import { ChevronRight, Pencil, Scale } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { AnimatedMoney } from "@/components/AnimatedMoney";
 import { money } from "@/lib/format";
 import { totals } from "@/lib/plan";
@@ -7,7 +8,7 @@ import { BUCKETS, type Plan } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /** One calm hero: how much is left, and a single bar showing where the rest goes. */
-export function Summary({ plan, onEdit, onInsights }: { plan: Plan; onEdit?: () => void; onInsights: () => void }) {
+export function Summary({ plan, onEdit, onInsights, onToggleAuto }: { plan: Plan; onEdit?: () => void; onInsights: () => void; onToggleAuto?: (v: boolean) => void }) {
   const t = totals(plan);
   const over = t.left < 0;
   const base = Math.max(plan.salary, t.planned, 1);
@@ -43,9 +44,22 @@ export function Summary({ plan, onEdit, onInsights }: { plan: Plan; onEdit?: () 
         ))}
       </div>
 
+      {onToggleAuto && (
+        <label className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-muted p-3.5">
+          <span className="flex items-center gap-3 text-sm">
+            <Scale className="size-4 shrink-0" />
+            <span>
+              <span className="block font-semibold">Auto-balance</span>
+              <span className="text-muted-foreground">{plan.auto ? "Unlocked items adjust to fit your salary" : "Keep every rupee in use"}</span>
+            </span>
+          </span>
+          <Switch checked={!!plan.auto} onCheckedChange={onToggleAuto} />
+        </label>
+      )}
+
       <button
         onClick={onInsights}
-        className="mt-5 flex w-full items-center justify-between rounded-full text-sm font-semibold text-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="mt-4 flex w-full items-center justify-between rounded-full text-sm font-semibold text-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
       >
         See insights <ChevronRight className="size-4" />
       </button>

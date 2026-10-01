@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { currencySymbol } from "@/lib/format";
@@ -16,14 +17,16 @@ interface Props {
   item: Item | null; // null = new
   defaultBucket: BucketId;
   currency: string;
+  auto: boolean;
   onSave: (item: Item) => void;
   onDelete: (id: string) => void;
 }
 
-export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, onSave, onDelete }: Props) {
+export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, auto, onSave, onDelete }: Props) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [bucket, setBucket] = useState<BucketId>(defaultBucket);
+  const [locked, setLocked] = useState(true);
   const [picking, setPicking] = useState(false);
   const [icon, setIcon] = useState<string | null>(null); // null = auto from name
 
@@ -34,6 +37,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
     setBucket(item?.bucket ?? defaultBucket);
     setIcon(item?.icon ?? null);
     setPicking(false);
+    setLocked(item ? !!item.locked || auto : true);
   }, [open, item, defaultBucket]);
 
   const shownIcon = icon ?? suggestIcon(name, bucket);
@@ -48,7 +52,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
           onSubmit={(e) => {
             e.preventDefault();
             if (!valid) return;
-            onSave({ id: item?.id ?? uid(), name: name.trim(), amount: Number(amount), bucket, paid: item?.paid ?? false, icon: shownIcon });
+            onSave({ id: item?.id ?? uid(), name: name.trim(), amount: Number(amount), bucket, paid: item?.paid ?? false, icon: shownIcon, locked: auto ? locked : item?.locked });
             onOpenChange(false);
           }}
         >
@@ -112,6 +116,15 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
               </div>
             )}
           </div>
+          {auto && (
+            <label className="flex items-center justify-between gap-4 rounded-xl bg-muted p-3">
+              <span className="text-sm">
+                <span className="block font-semibold">Fixed amount</span>
+                <span className="text-muted-foreground">{locked ? "Other items adjust around this." : "This item can adjust too."}</span>
+              </span>
+              <Switch checked={locked} onCheckedChange={setLocked} />
+            </label>
+          )}
           <div className="flex gap-3 pt-1">
             {item && (
               <Button type="button" variant="destructive" size="icon" aria-label="Delete" onClick={() => { onDelete(item.id); onOpenChange(false); }}>

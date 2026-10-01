@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { motion, useTransform, useMotionValue, type PanInfo } from "motion/react";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Lock, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { money } from "@/lib/format";
 import { getIcon } from "@/lib/icons";
@@ -10,10 +10,11 @@ import { cn } from "@/lib/utils";
 const THRESHOLD = 90;
 
 /** Flat list row. Swipe right = paid / unpaid, swipe left = delete (with undo). */
-export function ItemRow({ item, currency, readOnly, onToggle, onEdit, onDelete }: {
+export function ItemRow({ item, currency, readOnly, showLock, onToggle, onEdit, onDelete }: {
   item: Item;
   currency: string;
   readOnly?: boolean;
+  showLock?: boolean;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -67,7 +68,10 @@ export function ItemRow({ item, currency, readOnly, onToggle, onEdit, onDelete }
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted" >
             <Icon className="size-[18px]" />
           </span>
-          <span className={cn("min-w-0 flex-1 truncate font-medium", item.paid && "text-muted-foreground line-through")}>{item.name}</span>
+          <span className={cn("flex min-w-0 flex-1 items-center gap-1.5 font-medium", item.paid && "text-muted-foreground line-through")}>
+            <span className="truncate">{item.name}</span>
+            {showLock && item.locked && <Lock className="size-3 shrink-0 text-muted-foreground" aria-label="Fixed amount" />}
+          </span>
           <span className={cn("font-semibold tabular", item.paid && "text-muted-foreground")}>{money(item.amount, currency)}</span>
         </button>
         {!readOnly && (
