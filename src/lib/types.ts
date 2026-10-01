@@ -18,6 +18,7 @@ export interface TripItem {
   name: string;
   amount: number;
   category: TripCat;
+  icon?: string;
 }
 
 export interface Trip {
@@ -28,6 +29,7 @@ export interface Trip {
   end: string; // YYYY-MM-DD or ""
   budget: number;
   saved: number;
+  icon?: string;
   items: TripItem[];
 }
 

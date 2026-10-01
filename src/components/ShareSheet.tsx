@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { Check, Copy, ImageDown, Lock, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent } from "@/components/ui/sheet";
 import { buildShareUrl } from "@/lib/share";
 import { SharePreview } from "@/components/SharePreview";
 import type { Plan } from "@/lib/types";
@@ -35,6 +35,7 @@ export function ShareSheet({ open, onOpenChange, plan }: { open: boolean; onOpen
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title="Share budget" description="Anyone with the link sees a read-only copy.">
+        <SheetBody>
         <div className="space-y-4">
           <SharePreview ref={cardRef} plan={plan} />
           <div className="flex gap-2 rounded-xl bg-muted p-3 text-sm text-muted-foreground">
@@ -59,6 +60,7 @@ export function ShareSheet({ open, onOpenChange, plan }: { open: boolean; onOpen
             )}
           </div>
         </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

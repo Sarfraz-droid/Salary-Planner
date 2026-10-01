@@ -6,6 +6,7 @@ import { AnimatedMoney } from "@/components/AnimatedMoney";
 import { TripItemSheet, TripSheet } from "@/components/TripSheets";
 import { money } from "@/lib/format";
 import { tripPlanned } from "@/lib/plan";
+import { getCostIcon, getTripIcon } from "@/lib/tripIcons";
 import { countdown, daysUntil, fmtRange, tripDays, TRIP_CATS } from "@/lib/trip";
 import type { Plan, Trip, TripItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -36,11 +37,13 @@ function TripCard({ trip, currency, index, onOpen }: { trip: Trip; currency: str
   const planned = tripPlanned(trip);
   const target = trip.budget || planned;
   const when = countdown(trip);
+  const TripIcon = getTripIcon(trip.icon, trip.name, trip.destination);
   return (
     <motion.li initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05, ...SPRING }}>
       <button onClick={onOpen} className="w-full rounded-2xl bg-card p-4 text-left outline-none transition-transform active:scale-[0.985] focus-visible:ring-[3px] focus-visible:ring-ring/40">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-muted"><TripIcon className="size-5" /></span>
+          <div className="min-w-0 flex-1">
             <p className="truncate text-lg font-semibold">{trip.name}</p>
             <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
               {trip.destination ? <><MapPin className="size-3.5 shrink-0" />{trip.destination} · </> : null}
@@ -79,6 +82,7 @@ function Detail({ trip, plan, readOnly, onBack, onEditTrip, onAddItem, onEditIte
   const stillNeed = Math.max(0, target - trip.saved);
   const months = until !== null && until > 0 ? Math.max(1, Math.ceil(until / 30)) : 0;
   const perMonth = months ? Math.ceil(stillNeed / months) : 0;
+  const DetailIcon = getTripIcon(trip.icon, trip.name, trip.destination);
   const groups = TRIP_CATS.map((c) => ({ ...c, items: trip.items.filter((i) => i.category === c.id) })).filter((g) => g.items.length);
 
   return (
@@ -88,7 +92,8 @@ function Detail({ trip, plan, readOnly, onBack, onEditTrip, onAddItem, onEditIte
         {!readOnly && <Button variant="ghost" size="icon-sm" aria-label="Edit trip" onClick={onEditTrip}><Pencil /></Button>}
       </div>
 
-      <h2 className="mt-2 text-3xl font-bold">{trip.name}</h2>
+      <span className="mt-3 grid size-12 place-items-center rounded-full bg-card"><DetailIcon className="size-6" /></span>
+      <h2 className="mt-3 text-3xl font-bold">{trip.name}</h2>
       <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
         {trip.destination && <span className="flex items-center gap-1.5"><MapPin className="size-3.5" />{trip.destination}</span>}
         <span className="flex items-center gap-1.5"><CalendarDays className="size-3.5" />{fmtRange(trip)}{days > 0 && ` · ${days} day${days > 1 ? "s" : ""}`}</span>
@@ -143,7 +148,12 @@ function Detail({ trip, plan, readOnly, onBack, onEditTrip, onAddItem, onEditIte
                     disabled={readOnly}
                     className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
                   >
-                    <span className="truncate font-medium">{i.name}</span>
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted">
+                        {(() => { const I = getCostIcon(i.icon, i.name, i.category); return <I className="size-[18px]" />; })()}
+                      </span>
+                      <span className="truncate font-medium">{i.name}</span>
+                    </span>
                     <span className="flex shrink-0 items-center gap-1 font-semibold tabular">{money(i.amount, cur)}{!readOnly && <ChevronRight className="size-4 text-muted-foreground" />}</span>
                   </button>
                 </li>

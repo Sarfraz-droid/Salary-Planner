@@ -56,20 +56,20 @@ export function AmountPicker({ value, onChange, currency, steps = [100, 500, 100
 
   return (
     <div className={className}>
-      <div className="flex items-baseline justify-center gap-1.5 py-2" aria-live="polite" aria-label={`Amount ${shown}`}>
+      <div className="flex items-baseline justify-center gap-1.5 py-1" aria-live="polite" aria-label={`Amount ${shown}`}>
         <span className="font-display text-2xl font-semibold text-muted-foreground">{currencySymbol(currency)}</span>
         <motion.span
           key={value}
           initial={{ y: 6, opacity: 0.4 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.12 }}
-          className={cn("font-display text-5xl font-bold tabular", !value && "text-muted-foreground/40")}
+          className={cn("font-display text-4xl font-bold tabular", !value && "text-muted-foreground/40")}
         >
           {shown}
         </motion.span>
       </div>
 
-      <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-3 pt-1">
+      <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-2.5 pt-1">
         {steps.map((s) => (
           <button
             key={s}
@@ -91,7 +91,7 @@ export function AmountPicker({ value, onChange, currency, steps = [100, 500, 100
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Keypad">
+      <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Keypad">
         {KEYS.map((k) => (
           <button
             key={k}
@@ -101,7 +101,7 @@ export function AmountPicker({ value, onChange, currency, steps = [100, 500, 100
             onPointerDown={k === "back" ? () => { clearTimer.current = window.setTimeout(() => { buzz(); onChange(""); }, 600); } : undefined}
             onPointerUp={() => window.clearTimeout(clearTimer.current)}
             onPointerLeave={() => window.clearTimeout(clearTimer.current)}
-            className="grid h-12 place-items-center rounded-2xl bg-card font-display text-xl font-semibold outline-none transition-transform select-none active:scale-95 active:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            className="grid h-10 place-items-center rounded-2xl bg-card font-display text-lg font-semibold outline-none transition-transform select-none active:scale-95 active:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/40"
           >
             {k === "back" ? <Delete className="size-5" /> : k}
           </button>

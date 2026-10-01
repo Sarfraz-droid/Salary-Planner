@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AmountPicker } from "@/components/AmountPicker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetFooter } from "@/components/ui/sheet";
 import { currencySymbol } from "@/lib/format";
 import { CURRENCIES, type Plan } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ export function SetupSheet({ open, onOpenChange, plan, onSave }: Props) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title={fresh ? "Let's start" : "Salary & settings"} description="Stored only on this device.">
         <form
-          className="space-y-5"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             if (!valid) return;
@@ -45,6 +45,7 @@ export function SetupSheet({ open, onOpenChange, plan, onSave }: Props) {
             onOpenChange(false);
           }}
         >
+          <SheetBody className="space-y-5">
           <div className="space-y-1">
             <Label>Monthly take-home salary</Label>
             <AmountPicker value={salary} onChange={setSalary} currency={currency} steps={[1000, 5000, 10000, 25000]} />
@@ -89,11 +90,12 @@ export function SetupSheet({ open, onOpenChange, plan, onSave }: Props) {
               </span>
             </button>
           )}
-          <div className="sticky bottom-0 -mx-5 bg-background px-5 pb-1 pt-3">
-            <Button type="submit" size="lg" className="w-full" disabled={!valid}>
+          </SheetBody>
+          <SheetFooter>
+            <Button type="submit" size="lg" className="flex-1" disabled={!valid}>
               {fresh ? "Create my budget" : "Save"}
             </Button>
-          </div>
+          </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>

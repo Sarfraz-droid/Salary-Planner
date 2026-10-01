@@ -34,19 +34,19 @@ function SheetContent({
             if (info.offset.y > 120 || info.velocity.y > 600) closeRef.current?.click();
           }}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-lg rounded-t-[1.75rem] border-t bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom duration-300 max-h-[90dvh] overflow-y-auto shadow-2xl",
+            "fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-lg rounded-t-[1.75rem] border-t bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom duration-300 flex max-h-[92dvh] flex-col overflow-hidden shadow-2xl",
             className,
           )}
         >
           {/* Drag zone: handle + header */}
           <div
             onPointerDown={(e) => controls.start(e)}
-            className="-mx-5 cursor-grab touch-none px-5 pt-3 active:cursor-grabbing"
+            className="-mx-5 shrink-0 cursor-grab touch-none px-5 pt-3 active:cursor-grabbing"
           >
-            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-border" />
-            <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border" />
+            <div className="mb-3 flex items-start justify-between gap-4">
               <div>
-                <DialogPrimitive.Title className="font-display text-2xl font-bold">{title}</DialogPrimitive.Title>
+                <DialogPrimitive.Title className="font-display text-xl font-bold">{title}</DialogPrimitive.Title>
                 <DialogPrimitive.Description className={cn("mt-1 text-sm text-muted-foreground", !description && "sr-only")}>
                   {description ?? title}
                 </DialogPrimitive.Description>
@@ -61,11 +61,19 @@ function SheetContent({
               </DialogPrimitive.Close>
             </div>
           </div>
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </motion.div>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   );
 }
 
-export { Sheet, SheetTrigger, SheetClose, SheetContent };
+/** Scrolling middle of a sheet; keep actions in SheetFooter so they never cover content. */
+function SheetBody({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("-mx-1 min-h-0 flex-1 space-y-3.5 overflow-y-auto px-1 pb-3 pt-1", className)} {...props} />;
+}
+function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return <div className={cn("flex shrink-0 gap-3 border-t bg-background pt-3", className)} {...props} />;
+}
+
+export { SheetBody, SheetFooter, Sheet, SheetTrigger, SheetClose, SheetContent };

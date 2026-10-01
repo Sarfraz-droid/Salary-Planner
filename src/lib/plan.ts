@@ -84,11 +84,13 @@ function sanitizeTrip(t: Trip): Trip {
     end: DATE.test(t.end) ? t.end : "",
     budget: Math.max(0, Number(t.budget) || 0),
     saved: Math.max(0, Number(t.saved) || 0),
+    icon: typeof t.icon === "string" ? t.icon.slice(0, 20) : undefined,
     items: (Array.isArray(t.items) ? t.items : []).slice(0, 100).map((i) => ({
       id: String(i.id ?? uid()),
       name: String(i.name ?? "").slice(0, 60),
       amount: Math.max(0, Number(i.amount) || 0),
       category: TRIP_CATS.includes(i.category) ? i.category : "other",
+      icon: typeof i.icon === "string" ? i.icon.slice(0, 20) : undefined,
     })),
   };
 }

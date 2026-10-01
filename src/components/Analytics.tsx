@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
 import { CheckCircle2, PiggyBank, Sun, Wallet } from "lucide-react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatedMoney } from "@/components/AnimatedMoney";
 import { money } from "@/lib/format";
@@ -182,6 +182,7 @@ export function Analytics({ open, onOpenChange, plan }: { open: boolean; onOpenC
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent title="Insights" description="Where your salary is going. Swipe to switch views." className="min-h-[70dvh]">
+        <SheetBody>
         <Tabs value={view} onValueChange={(v) => go(v as View)}>
           <TabsList className="grid-cols-3">
             <TabsTrigger value="split">Split</TabsTrigger>
@@ -207,6 +208,7 @@ export function Analytics({ open, onOpenChange, plan }: { open: boolean; onOpenC
             </motion.div>
           </AnimatePresence>
         </motion.div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );
