@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { SmartAdd } from "@/components/SmartAdd";
+import { smartCost } from "@/lib/ai";
 import { AmountPicker } from "@/components/AmountPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,6 +182,19 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
           }}
         >
           <SheetBody>
+          {!item && (
+            <SmartAdd
+              placeholder='e.g. "hotel 6000" or "train 1.2k"'
+              onFill={async ({ name: n, amount: a }) => {
+                const r = await smartCost(n, category);
+                if (n) setName(n);
+                if (a) setAmount(String(a));
+                setIcon(r.icon);
+                setCategory(r.category);
+                setCatTouched(true);
+              }}
+            />
+          )}
           {!item && (
             <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label="Quick picks">
               {COST_PRESETS.map((p) => (

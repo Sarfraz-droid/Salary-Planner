@@ -55,10 +55,13 @@ export const COST_ICONS: Record<string, Def & { category: TripCat }> = {
   other: { icon: Tag, label: "Other", category: "other", keywords: [] },
 };
 
-export function suggestCost(name: string, fallback: TripCat): { icon: string; category: TripCat } {
+export function matchCost(name: string): { icon: string; category: TripCat } | null {
   const n = name.toLowerCase();
   for (const [key, d] of Object.entries(COST_ICONS)) if (d.keywords.some((k) => n.includes(k))) return { icon: key, category: d.category };
-  return { icon: "other", category: fallback };
+  return null;
+}
+export function suggestCost(name: string, fallback: TripCat): { icon: string; category: TripCat } {
+  return matchCost(name) ?? { icon: "other", category: fallback };
 }
 export const getCostIcon = (key: string | undefined, name: string, category: TripCat) =>
   COST_ICONS[key && COST_ICONS[key] ? key : suggestCost(name, category).icon].icon;

@@ -33,13 +33,26 @@ export const ICONS: Record<string, { icon: LucideIcon; label: string; keywords: 
 
 const BUCKET_DEFAULT: Record<BucketId, string> = { needs: "home", wants: "fun", savings: "savings" };
 
-export function suggestIcon(name: string, bucket: BucketId): string {
+/** Keyword match only: null when nothing recognises the name. */
+export function matchIcon(name: string): string | null {
   const n = name.toLowerCase();
   for (const [key, v] of Object.entries(ICONS)) {
     if (v.keywords.some((k) => n.includes(k))) return key;
   }
-  return BUCKET_DEFAULT[bucket];
+  return null;
 }
+
+export function suggestIcon(name: string, bucket: BucketId): string {
+  return matchIcon(name) ?? BUCKET_DEFAULT[bucket];
+}
+
+/** Which bucket an icon usually belongs to (used by smart add). */
+export const ICON_BUCKET: Record<string, BucketId> = {
+  home: "needs", groceries: "needs", food: "wants", coffee: "wants", bills: "needs", internet: "needs",
+  phone: "needs", transport: "needs", car: "needs", health: "needs", insurance: "needs", education: "needs",
+  kids: "needs", fun: "wants", shopping: "wants", clothes: "wants", fitness: "wants", travel: "wants",
+  gift: "wants", savings: "savings", invest: "savings", debt: "needs", other: "wants",
+};
 
 export function getIcon(key: string | undefined, name: string, bucket: BucketId) {
   return ICONS[key && ICONS[key] ? key : suggestIcon(name, bucket)].icon;

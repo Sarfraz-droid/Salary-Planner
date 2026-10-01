@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AmountPicker } from "@/components/AmountPicker";
+import { SmartAdd } from "@/components/SmartAdd";
+import { smartExpense } from "@/lib/ai";
 import { PRESETS } from "@/lib/presets";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -58,6 +60,18 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
           }}
         >
           <SheetBody>
+            {!item && (
+              <SmartAdd
+                placeholder='e.g. "swiggy 450" or "rent 15k"'
+                onFill={async ({ name: n, amount: a }) => {
+                  const r = await smartExpense(n, bucket);
+                  if (n) setName(n);
+                  if (a) setAmount(String(a));
+                  setIcon(r.icon);
+                  setBucket(r.bucket);
+                }}
+              />
+            )}
             {!item && (
               <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label="Quick picks">
                 {PRESETS.map((p) => (
