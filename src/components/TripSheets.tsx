@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
 import { AmountPicker } from "@/components/AmountPicker";
 import { IconGrid, IconToggle } from "@/components/IconPicker";
-import { SmartAdd } from "@/components/SmartAdd";
+import { ModeSwitch, SmartAdd } from "@/components/SmartAdd";
 import { StepSummary } from "@/components/StepSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -142,6 +142,7 @@ interface TripItemSheetProps {
 
 export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDelete }: TripItemSheetProps) {
   const [step, setStep] = useState(0); // 0 = what, 1 = how much
+  const [mode, setMode] = useState<"manual" | "smart">("manual");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<TripCat>("stay");
@@ -152,6 +153,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
   useEffect(() => {
     if (!open) return;
     setStep(item ? 1 : 0);
+    setMode("manual");
     setPicking(false);
     setName(item?.name ?? "");
     setAmount(item ? String(item.amount) : "");
@@ -184,21 +186,22 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
           <SheetBody>
             {step === 0 ? (
               <SheetStep stepKey="what">
-                {!item && (
-                  <SheetSection title="Quick add" hint="Type it like you'd say it.">
-                    <SmartAdd
-                      placeholder='e.g. "hotel 6000" or "train 1.2k"'
-                      onFill={async ({ name: n, amount: a }) => {
-                        const r = await smartCost(n, category);
-                        if (n) setName(n);
-                        setIcon(r.icon);
-                        setCategory(r.category);
-                        setCatTouched(true);
-                        if (a) { setAmount(String(a)); setStep(1); }
-                      }}
-                    />
-                  </SheetSection>
-                )}
+                {!item && <ModeSwitch mode={mode} onChange={setMode} />}
+                {!item && mode === "smart" ? (
+                  <SmartAdd
+                    placeholder='e.g. "hotel 6000"'
+                    examples={["hotel 6000", "train 1.2k", "scuba 3500", "dinner 800"]}
+                    onFill={async ({ name: n, amount: a }) => {
+                      const r = await smartCost(n, category);
+                      if (n) setName(n);
+                      setIcon(r.icon);
+                      setCategory(r.category);
+                      setCatTouched(true);
+                      if (a) { setAmount(String(a)); setStep(1); } else setMode("manual");
+                    }}
+                  />
+                ) : (
+                  <>
                 {!item && (
                   <SheetSection title="Common">
                     <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label="Quick picks">
@@ -244,6 +247,8 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
                     ))}
                   </div>
                 </SheetSection>
+                  </>
+                )}
               </SheetStep>
             ) : (
               <SheetStep stepKey="amount">
@@ -252,6 +257,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
               </SheetStep>
             )}
           </SheetBody>
+          {!(step === 0 && !item && mode === "smart") && (
           <SheetFooter>
             {step === 0 ? (
               <Button type="submit" size="lg" className="flex-1" disabled={!hasName}>Next <ArrowRight /></Button>
@@ -266,6 +272,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
               </>
             )}
           </SheetFooter>
+          )}
         </form>
       </SheetContent>
     </Sheet>

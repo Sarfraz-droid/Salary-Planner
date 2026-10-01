@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AmountPicker } from "@/components/AmountPicker";
-import { SmartAdd } from "@/components/SmartAdd";
+import { ModeSwitch, SmartAdd } from "@/components/SmartAdd";
 import { StepSummary } from "@/components/StepSummary";
 import { smartExpense } from "@/lib/ai";
 import { PRESETS } from "@/lib/presets";
@@ -28,6 +28,7 @@ interface Props {
 
 export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, auto, onSave, onDelete }: Props) {
   const [step, setStep] = useState(0); // 0 = what, 1 = how much
+  const [mode, setMode] = useState<"manual" | "smart">("manual");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [bucket, setBucket] = useState<BucketId>(defaultBucket);
@@ -38,6 +39,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
   useEffect(() => {
     if (!open) return;
     setStep(item ? 1 : 0);
+    setMode("manual");
     setName(item?.name ?? "");
     setAmount(item ? String(item.amount) : "");
     setBucket(item?.bucket ?? defaultBucket);
@@ -64,20 +66,21 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
           <SheetBody>
             {step === 0 ? (
               <SheetStep stepKey="what">
-                {!item && (
-                  <SheetSection title="Quick add" hint="Type it like you'd say it.">
-                    <SmartAdd
-                      placeholder='e.g. "swiggy 450" or "rent 15k"'
-                      onFill={async ({ name: n, amount: a }) => {
-                        const r = await smartExpense(n, bucket);
-                        if (n) setName(n);
-                        setIcon(r.icon);
-                        setBucket(r.bucket);
-                        if (a) { setAmount(String(a)); setStep(1); }
-                      }}
-                    />
-                  </SheetSection>
-                )}
+                {!item && <ModeSwitch mode={mode} onChange={setMode} />}
+                {!item && mode === "smart" ? (
+                  <SmartAdd
+                    placeholder='e.g. "swiggy 450 dinner"'
+                    examples={["swiggy 450 dinner", "rent 15k", "sip 5000", "uber 250"]}
+                    onFill={async ({ name: n, amount: a }) => {
+                      const r = await smartExpense(n, bucket);
+                      if (n) setName(n);
+                      setIcon(r.icon);
+                      setBucket(r.bucket);
+                      if (a) { setAmount(String(a)); setStep(1); } else setMode("manual");
+                    }}
+                  />
+                ) : (
+                  <>
                 {!item && (
                   <SheetSection title="Common">
                     <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5" role="group" aria-label="Quick picks">
@@ -123,6 +126,8 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
                     ))}
                   </div>
                 </SheetSection>
+                  </>
+                )}
               </SheetStep>
             ) : (
               <SheetStep stepKey="amount">
@@ -140,6 +145,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
               </SheetStep>
             )}
           </SheetBody>
+          {!(step === 0 && !item && mode === "smart") && (
           <SheetFooter>
             {step === 0 ? (
               <Button type="submit" size="lg" className="flex-1" disabled={!hasName}>Next <ArrowRight /></Button>
@@ -154,6 +160,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
               </>
             )}
           </SheetFooter>
+          )}
         </form>
       </SheetContent>
     </Sheet>
