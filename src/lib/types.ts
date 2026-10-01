@@ -6,6 +6,7 @@ export interface Item {
   amount: number;
   bucket: BucketId;
   paid: boolean;
+  icon?: string;
 }
 
 export interface Plan {

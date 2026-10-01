@@ -1,5 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { money } from "@/lib/format";
+import { getIcon } from "@/lib/icons";
 import { BUCKETS, type Item } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ export function ItemRow({ item, currency, readOnly, onToggle, onEdit }: {
   onEdit: () => void;
 }) {
   const b = BUCKETS.find((x) => x.id === item.bucket)!;
+  const Icon = getIcon(item.icon, item.name, item.bucket);
   return (
     <li className="flex items-center gap-3 rounded-xl border bg-card p-2 pr-3">
       {!readOnly && (
@@ -24,7 +26,7 @@ export function ItemRow({ item, currency, readOnly, onToggle, onEdit }: {
         className={cn("flex min-w-0 flex-1 items-center gap-3 rounded-lg py-1.5 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40", readOnly && "pl-2")}
       >
         <span className="grid size-9 shrink-0 place-items-center rounded-full text-base" style={{ background: `color-mix(in oklch, var(--${b.id}) 18%, transparent)` }}>
-          {b.emoji}
+          <Icon className="size-[18px]" style={{ color: `var(--${b.id})` }} />
         </span>
         <span className="min-w-0 flex-1">
           <span className={cn("block truncate font-medium", item.paid && "text-muted-foreground line-through")}>{item.name}</span>

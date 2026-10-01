@@ -1,3 +1,4 @@
+import { suggestIcon } from "./icons";
 import type { BucketId, Item, Plan } from "./types";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
@@ -13,6 +14,7 @@ export function starterPlan(salary: number, currency = "INR"): Plan {
     amount: Math.round((salary * pct) / 100 / 100) * 100,
     bucket,
     paid: false,
+    icon: suggestIcon(name, bucket),
   });
   return {
     v: 1,
@@ -59,6 +61,7 @@ export function sanitize(raw: unknown): Plan | null {
       amount: Math.max(0, Number(i.amount) || 0),
       bucket: buckets.includes(i.bucket) ? i.bucket : "needs",
       paid: !!i.paid,
+      icon: typeof i.icon === "string" ? i.icon.slice(0, 20) : undefined,
     })),
   };
 }
