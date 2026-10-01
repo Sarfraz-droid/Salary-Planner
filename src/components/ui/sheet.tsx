@@ -70,10 +70,34 @@ function SheetContent({
 
 /** Scrolling middle of a sheet; keep actions in SheetFooter so they never cover content. */
 function SheetBody({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("-mx-1 min-h-0 flex-1 space-y-3.5 overflow-y-auto px-1 pb-3 pt-1", className)} {...props} />;
+  return <div className={cn("-mx-5 min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 pb-5 pt-2", className)} {...props} />;
 }
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("flex shrink-0 gap-3 border-t bg-background pt-3", className)} {...props} />;
+  return <div className={cn("flex shrink-0 gap-3 border-t bg-background pt-4", className)} {...props} />;
 }
 
-export { SheetBody, SheetFooter, Sheet, SheetTrigger, SheetClose, SheetContent };
+/** One step of a multi-step sheet: fades/slides in, with generous spacing between sections. */
+function SheetStep({ stepKey, children }: { stepKey: string | number; children: React.ReactNode }) {
+  return (
+    <motion.div key={stepKey} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.18 }} className="space-y-8">
+      {children}
+    </motion.div>
+  );
+}
+
+/** A labelled group inside a step. */
+function SheetSection({ title, hint, children }: { title?: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-3">
+      {title && (
+        <div>
+          <h3 className="text-sm font-semibold">{title}</h3>
+          {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+export { SheetStep, SheetSection, SheetBody, SheetFooter, Sheet, SheetTrigger, SheetClose, SheetContent };
