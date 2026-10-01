@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type { BucketId } from "@/lib/types";
 
 const COLORS: Record<BucketId, string> = {
@@ -27,7 +28,7 @@ export function Donut({ salary, byBucket, children }: Props) {
           const len = (byBucket[id] / base) * c;
           if (len <= 0) return null;
           const el = (
-            <circle
+            <motion.circle
               key={id}
               cx="60"
               cy="60"
@@ -36,9 +37,9 @@ export function Donut({ salary, byBucket, children }: Props) {
               stroke={COLORS[id]}
               strokeWidth="14"
               strokeLinecap="butt"
-              strokeDasharray={`${Math.max(len - 2, 0)} ${c}`}
-              strokeDashoffset={-offset}
-              className="transition-all duration-500"
+              initial={{ strokeDasharray: `0 ${c}`, strokeDashoffset: -offset }}
+              animate={{ strokeDasharray: `${Math.max(len - 2, 0)} ${c}`, strokeDashoffset: -offset }}
+              transition={{ type: "spring", stiffness: 90, damping: 20 }}
             />
           );
           offset += len;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { Eye, Moon, Plus, Share2, Sun, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,6 +67,7 @@ export default function App() {
   const openEdit = (i: Item) => { setEditing(i); setItemOpen(true); };
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="mx-auto min-h-dvh w-full max-w-lg px-4 pb-32 pt-[max(1rem,env(safe-area-inset-top))]">
       <header className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2.5">
@@ -104,7 +106,9 @@ export default function App() {
         </div>
       ) : (
         <>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Summary plan={plan} onEdit={readOnly ? undefined : () => setSetupOpen(true)} />
+          </motion.div>
 
           <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)} className="mt-6">
             <TabsList>
@@ -116,9 +120,11 @@ export default function App() {
           </Tabs>
 
           <ul className="mt-4 space-y-2">
-            {visible.map((item) => (
+            <AnimatePresence mode="popLayout" initial={false}>
+            {visible.map((item, idx) => (
               <ItemRow
                 key={item.id}
+                index={idx}
                 item={item}
                 currency={plan.currency}
                 readOnly={readOnly}
@@ -126,6 +132,7 @@ export default function App() {
                 onEdit={() => openEdit(item)}
               />
             ))}
+            </AnimatePresence>
           </ul>
 
           {visible.length === 0 && (
@@ -137,7 +144,7 @@ export default function App() {
         </>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
+      <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 26, delay: 0.2 }} className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
         <div className="mx-auto flex max-w-lg gap-3">
           {readOnly ? (
             <>
@@ -152,7 +159,7 @@ export default function App() {
             )
           )}
         </div>
-      </div>
+      </motion.div>
 
       <ItemSheet
         open={itemOpen}
@@ -178,5 +185,6 @@ export default function App() {
       />
       <ShareSheet open={shareOpen} onOpenChange={setShareOpen} plan={mine} />
     </div>
+    </MotionConfig>
   );
 }

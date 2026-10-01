@@ -1,5 +1,7 @@
+import { AnimatePresence, motion } from "motion/react";
 import { Pencil } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { AnimatedMoney } from "@/components/AnimatedMoney";
 import { Donut } from "@/components/Donut";
 import { money } from "@/lib/format";
 import { totals } from "@/lib/plan";
@@ -14,7 +16,7 @@ export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">Monthly salary</p>
-          <p className="font-display text-3xl font-bold tabular">{money(plan.salary, plan.currency)}</p>
+          <p className="font-display text-3xl font-bold tabular"><AnimatedMoney value={plan.salary} currency={plan.currency} /></p>
         </div>
         {onEdit && (
           <button
@@ -32,11 +34,11 @@ export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
             <p className="text-xs text-muted-foreground">{over ? "Over by" : "Left"}</p>
             <p
               className={cn(
-                "font-display text-xl font-bold tabular",
+                "font-display text-lg font-bold tabular",
                 over ? "text-destructive" : "text-primary",
               )}
             >
-              {money(Math.abs(t.left), plan.currency, true)}
+              <AnimatedMoney value={Math.abs(t.left)} currency={plan.currency} />
             </p>
           </div>
         </Donut>
@@ -52,7 +54,7 @@ export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
                   <span className="ml-auto tabular text-muted-foreground">{pct}%</span>
                 </div>
                 <p className="pl-[18px] text-sm font-semibold tabular">
-                  {money(t.byBucket[b.id], plan.currency)}
+                  <AnimatedMoney value={t.byBucket[b.id]} currency={plan.currency} />
                 </p>
               </li>
             );
@@ -60,11 +62,18 @@ export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
         </ul>
       </div>
 
-      {over && (
-        <p className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          You've planned {money(-t.left, plan.currency)} more than your salary. Trim something!
-        </p>
-      )}
+      <AnimatePresence>
+        {over && (
+          <motion.p
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            className="overflow-hidden rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            You've planned {money(-t.left, plan.currency)} more than your salary. Trim something!
+          </motion.p>
+        )}
+      </AnimatePresence>
     </Card>
   );
 }
