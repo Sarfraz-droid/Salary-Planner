@@ -9,12 +9,33 @@ export interface Item {
   icon?: string;
 }
 
+export type TripCat = "stay" | "food" | "transport" | "activities" | "shopping" | "other";
+
+export interface TripItem {
+  id: string;
+  name: string;
+  amount: number;
+  category: TripCat;
+}
+
+export interface Trip {
+  id: string;
+  name: string;
+  destination: string;
+  start: string; // YYYY-MM-DD or ""
+  end: string; // YYYY-MM-DD or ""
+  budget: number;
+  saved: number;
+  items: TripItem[];
+}
+
 export interface Plan {
   v: 1;
   name: string;
   currency: string;
   salary: number;
   items: Item[];
+  trips?: Trip[];
 }
 
 export const BUCKETS: {

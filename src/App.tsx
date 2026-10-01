@@ -8,10 +8,12 @@ import { ItemRow } from "@/components/ItemRow";
 import { ItemSheet } from "@/components/ItemSheet";
 import { SetupSheet } from "@/components/SetupSheet";
 import { ShareSheet } from "@/components/ShareSheet";
+import { Trips } from "@/components/Trips";
 import { Summary } from "@/components/Summary";
 import { starterPlan } from "@/lib/plan";
 import { readSharedPlan } from "@/lib/share";
 import { usePlan } from "@/lib/usePlan";
+import { cn } from "@/lib/utils";
 import { money } from "@/lib/format";
 import { totals } from "@/lib/plan";
 import { BUCKETS, type Item, type Plan } from "@/lib/types";
@@ -22,6 +24,7 @@ export default function App() {
   const plan = shared ?? mine;
   const readOnly = !!shared;
 
+  const [view, setView] = useState<"budget" | "trips">("budget");
   const [editing, setEditing] = useState<Item | null>(null);
   const [itemOpen, setItemOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -98,6 +101,20 @@ export default function App() {
         </div>
       </header>
 
+      <nav className="relative mb-5 grid grid-cols-2 rounded-full bg-muted p-1" aria-label="Sections">
+        {(["budget", "trips"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            aria-current={view === v}
+            className={cn("relative h-10 rounded-full text-sm font-semibold outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/40", view === v ? "text-foreground" : "text-muted-foreground")}
+          >
+            {view === v && <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-card shadow-sm" transition={{ type: "spring", stiffness: 400, damping: 32 }} />}
+            <span className="relative">{v === "budget" ? "Budget" : "Trips"}</span>
+          </button>
+        ))}
+      </nav>
+
       {readOnly && (
         <div className="mb-3 flex items-center gap-3 rounded-xl bg-accent/60 p-3 text-accent-foreground">
           <Eye className="size-5 shrink-0" />
@@ -105,7 +122,9 @@ export default function App() {
         </div>
       )}
 
-      {plan.salary === 0 && !readOnly ? (
+      {view === "trips" ? (
+        <Trips plan={plan} readOnly={readOnly} update={update} />
+      ) : plan.salary === 0 && !readOnly ? (
         <div className="mt-10 rounded-xl border border-dashed p-8 text-center">
           <p className="font-display text-xl font-bold">Every rupee needs a job.</p>
           <p className="mt-1 text-sm text-muted-foreground">Add your salary to start planning.</p>
@@ -170,7 +189,7 @@ export default function App() {
               <Button size="lg" className="flex-1" onClick={saveCopy}>Save a copy</Button>
             </>
           ) : (
-            plan.salary > 0 && (
+            plan.salary > 0 && view === "budget" && (
               <Button size="icon" className="ml-auto size-14 shadow-xl" onClick={openNew} aria-label="Add expense">
                 <Plus className="size-6" />
               </Button>
@@ -198,7 +217,7 @@ export default function App() {
         onOpenChange={setSetupOpen}
         plan={mine}
         onSave={(v, useStarter) =>
-          setPlan((p) => (useStarter ? { ...starterPlan(v.salary, v.currency), name: v.name } : { ...p, ...v }))
+          setPlan((p) => (useStarter ? { ...starterPlan(v.salary, v.currency), name: v.name, trips: p.trips } : { ...p, ...v }))
         }
       />
       <Analytics open={insightsOpen} onOpenChange={setInsightsOpen} plan={plan} />

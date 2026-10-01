@@ -1,5 +1,5 @@
 import { suggestIcon } from "./icons";
-import type { BucketId, Item, Plan } from "./types";
+import type { BucketId, Item, Plan, Trip, TripCat } from "./types";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -44,6 +44,31 @@ export function totals(plan: Plan) {
   return { byBucket, planned, paid, left: plan.salary - planned };
 }
 
+const TRIP_CATS: TripCat[] = ["stay", "food", "transport", "activities", "shopping", "other"];
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function sanitizeTrip(t: Trip): Trip {
+  return {
+    id: String(t.id ?? uid()),
+    name: String(t.name ?? "").slice(0, 60),
+    destination: String(t.destination ?? "").slice(0, 60),
+    start: DATE.test(t.start) ? t.start : "",
+    end: DATE.test(t.end) ? t.end : "",
+    budget: Math.max(0, Number(t.budget) || 0),
+    saved: Math.max(0, Number(t.saved) || 0),
+    items: (Array.isArray(t.items) ? t.items : []).slice(0, 100).map((i) => ({
+      id: String(i.id ?? uid()),
+      name: String(i.name ?? "").slice(0, 60),
+      amount: Math.max(0, Number(i.amount) || 0),
+      category: TRIP_CATS.includes(i.category) ? i.category : "other",
+    })),
+  };
+}
+
+export function tripPlanned(t: Trip) {
+  return t.items.reduce((n, i) => n + i.amount, 0);
+}
+
 /** Defensive parse so bad localStorage / share links can't crash the app. */
 export function sanitize(raw: unknown): Plan | null {
   if (!raw || typeof raw !== "object") return null;
@@ -63,5 +88,6 @@ export function sanitize(raw: unknown): Plan | null {
       paid: !!i.paid,
       icon: typeof i.icon === "string" ? i.icon.slice(0, 20) : undefined,
     })),
+    trips: Array.isArray(r.trips) ? r.trips.slice(0, 30).map(sanitizeTrip) : [],
   };
 }
