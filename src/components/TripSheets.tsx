@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconGrid, IconToggle } from "@/components/IconPicker";
 import { Sheet, SheetBody, SheetContent, SheetFooter } from "@/components/ui/sheet";
-import { money } from "@/lib/format";
 import { uid } from "@/lib/plan";
 import { TRIP_CATS } from "@/lib/trip";
 import { COST_ICONS, COST_PRESETS, suggestCost, TRIP_ICONS, suggestTripIcon } from "@/lib/tripIcons";
@@ -30,8 +29,6 @@ export function TripSheet({ open, onOpenChange, trip, currency, onSave, onDelete
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [budget, setBudget] = useState("");
-  const [saved, setSaved] = useState("");
-  const [field, setField] = useState<"budget" | "saved">("budget");
   const [icon, setIcon] = useState<string | null>(null); // null = auto
   const [picking, setPicking] = useState(false);
 
@@ -43,9 +40,7 @@ export function TripSheet({ open, onOpenChange, trip, currency, onSave, onDelete
     setStart(trip?.start ?? "");
     setEnd(trip?.end ?? "");
     setBudget(trip?.budget ? String(trip.budget) : "");
-    setSaved(trip?.saved ? String(trip.saved) : "");
     setIcon(trip?.icon ?? null);
-    setField("budget");
   }, [open, trip]);
 
   const valid = name.trim().length > 0 && (!start || !end || end >= start);
@@ -66,7 +61,7 @@ export function TripSheet({ open, onOpenChange, trip, currency, onSave, onDelete
               start,
               end: end || start,
               budget: Number(budget) || 0,
-              saved: Number(saved) || 0,
+              saved: trip?.saved ?? 0,
               icon: shownIcon,
               items: trip?.items ?? [],
             });
@@ -92,32 +87,9 @@ export function TripSheet({ open, onOpenChange, trip, currency, onSave, onDelete
           </div>
 
           <div>
-            <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1" role="group" aria-label="Amount to edit">
-              {([["budget", "Budget", budget], ["saved", "Saved so far", saved]] as const).map(([id, label, v]) => (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={field === id}
-                  onClick={() => setField(id)}
-                  className={cn(
-                    "h-12 rounded-full px-2 text-sm outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                    field === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
-                  )}
-                >
-                  <span className="block text-xs">{label}</span>
-                  <span className="block font-semibold tabular">{money(Number(v) || 0, currency)}</span>
-                </button>
-              ))}
-            </div>
-            <AmountPicker
-              className="mt-3"
-              value={field === "budget" ? budget : saved}
-              onChange={field === "budget" ? setBudget : setSaved}
-              currency={currency}
-              steps={field === "budget" ? [1000, 5000, 10000, 25000] : [500, 1000, 5000, 10000]}
-            />
+            <p className="text-center text-sm text-muted-foreground">Trip budget</p>
+            <AmountPicker value={budget} onChange={setBudget} currency={currency} steps={[1000, 5000, 10000, 25000]} />
           </div>
-
           </SheetBody>
           <SheetFooter>
             {trip && (

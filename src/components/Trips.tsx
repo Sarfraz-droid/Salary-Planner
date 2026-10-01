@@ -7,7 +7,7 @@ import { TripItemSheet, TripSheet } from "@/components/TripSheets";
 import { money } from "@/lib/format";
 import { tripPlanned } from "@/lib/plan";
 import { getCostIcon, getTripIcon } from "@/lib/tripIcons";
-import { countdown, daysUntil, fmtRange, tripDays, TRIP_CATS } from "@/lib/trip";
+import { countdown, fmtRange, tripDays, TRIP_CATS } from "@/lib/trip";
 import type { Plan, Trip, TripItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -78,10 +78,6 @@ function Detail({ trip, plan, readOnly, onBack, onEditTrip, onAddItem, onEditIte
   const target = trip.budget || planned;
   const left = trip.budget - planned;
   const days = tripDays(trip);
-  const until = daysUntil(trip);
-  const stillNeed = Math.max(0, target - trip.saved);
-  const months = until !== null && until > 0 ? Math.max(1, Math.ceil(until / 30)) : 0;
-  const perMonth = months ? Math.ceil(stillNeed / months) : 0;
   const DetailIcon = getTripIcon(trip.icon, trip.name, trip.destination);
   const groups = TRIP_CATS.map((c) => ({ ...c, items: trip.items.filter((i) => i.category === c.id) })).filter((g) => g.items.length);
 
@@ -115,23 +111,6 @@ function Detail({ trip, plan, readOnly, onBack, onEditTrip, onAddItem, onEditIte
           </p>
         )}
       </section>
-
-      {target > 0 && (
-        <section className="mt-3 rounded-2xl bg-card p-5">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-base font-semibold">Saving for it</h3>
-            <span className="text-sm tabular text-muted-foreground">{money(trip.saved, cur)} saved</span>
-          </div>
-          <div className="mt-3"><Bar value={trip.saved} max={target} /></div>
-          <p className="mt-3 text-sm text-muted-foreground">
-            {stillNeed === 0
-              ? "You've saved enough. Enjoy the trip!"
-              : months
-                ? <>Put aside <b className="text-foreground tabular">{money(perMonth, cur)}</b> a month for {months} month{months > 1 ? "s" : ""}{plan.salary > 0 && <> — {Math.round((perMonth / plan.salary) * 100)}% of your salary</>}.</>
-                : <>Still to save: <b className="text-foreground tabular">{money(stillNeed, cur)}</b>. Set a start date to see a monthly target.</>}
-          </p>
-        </section>
-      )}
 
       <div className="mt-8 space-y-6">
         {groups.map((g) => (
