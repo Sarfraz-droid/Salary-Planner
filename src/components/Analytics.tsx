@@ -55,7 +55,7 @@ function Split({ plan }: { plan: Plan }) {
         return (
           <motion.div key={b.id} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12 + i * 0.08, ...SPRING }}>
             <div className="flex items-baseline justify-between">
-              <span className="font-semibold">{b.emoji} {b.label}</span>
+              <span className="flex items-center gap-2 font-semibold"><span className="size-2.5 rounded-full" style={{ background: `var(--${b.id})` }} />{b.label}</span>
               <span className="tabular text-sm text-muted-foreground">
                 <b className="text-foreground">{Math.round(actual * 100)}%</b> of {b.target * 100}% guide
               </span>

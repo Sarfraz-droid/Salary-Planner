@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { Eye, Moon, Plus, Share2, Sun, Wallet } from "lucide-react";
+import { Eye, Moon, Plus, Share2, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Analytics } from "@/components/Analytics";
 import { Toast } from "@/components/Toast";
 import { ItemRow } from "@/components/ItemRow";
@@ -13,9 +12,9 @@ import { Summary } from "@/components/Summary";
 import { starterPlan } from "@/lib/plan";
 import { readSharedPlan } from "@/lib/share";
 import { usePlan } from "@/lib/usePlan";
-import { BUCKETS, type BucketId, type Item, type Plan } from "@/lib/types";
-
-type Filter = "all" | BucketId;
+import { money } from "@/lib/format";
+import { totals } from "@/lib/plan";
+import { BUCKETS, type Item, type Plan } from "@/lib/types";
 
 export default function App() {
   const { plan: mine, setPlan, update } = usePlan();
@@ -23,7 +22,6 @@ export default function App() {
   const plan = shared ?? mine;
   const readOnly = !!shared;
 
-  const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState<Item | null>(null);
   const [itemOpen, setItemOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -62,10 +60,7 @@ export default function App() {
     leaveShared();
   }
 
-  const visible = useMemo(
-    () => plan.items.filter((i) => filter === "all" || i.bucket === filter),
-    [plan.items, filter],
-  );
+  const sums = useMemo(() => totals(plan).byBucket, [plan]);
 
   function deleteItem(id: string) {
     const index = mine.items.findIndex((i) => i.id === id);
@@ -86,22 +81,17 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
     <div className="mx-auto min-h-dvh w-full max-w-lg px-4 pb-32 pt-[max(1rem,env(safe-area-inset-top))]">
-      <header className="flex items-center justify-between py-2">
-        <div className="flex items-center gap-2.5">
-          <div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <Wallet className="size-5" />
-          </div>
-          <div className="leading-tight">
-            <h1 className="text-lg font-bold">Gareeb Budget</h1>
-            <p className="max-w-[11rem] truncate text-xs text-muted-foreground">{plan.name}</p>
-          </div>
+      <header className="flex items-center justify-between py-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Gareeb Budget</p>
+          <h1 className="truncate text-2xl font-bold">{plan.name}</h1>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex shrink-0 gap-1">
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
             {dark ? <Sun /> : <Moon />}
           </Button>
           {!readOnly && (
-            <Button variant="secondary" size="icon" onClick={() => setShareOpen(true)} aria-label="Share budget" disabled={plan.items.length === 0}>
+            <Button variant="ghost" size="icon" onClick={() => setShareOpen(true)} aria-label="Share budget" disabled={plan.items.length === 0}>
               <Share2 />
             </Button>
           )}
@@ -127,46 +117,52 @@ export default function App() {
           <Summary plan={plan} onEdit={readOnly ? undefined : () => setSetupOpen(true)} onInsights={() => setInsightsOpen(true)} />
           </motion.div>
 
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)} className="mt-6">
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              {BUCKETS.map((b) => (
-                <TabsTrigger key={b.id} value={b.id}>{b.label}</TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="mt-8 space-y-7">
+            {BUCKETS.map((b) => {
+              const items = plan.items.filter((i) => i.bucket === b.id);
+              if (!items.length) return null;
+              return (
+                <section key={b.id}>
+                  <div className="mb-2 flex items-baseline justify-between px-1">
+                    <h2 className="flex items-center gap-2 text-base font-semibold">
+                      <span className="size-2.5 rounded-full" style={{ background: `var(--${b.id})` }} />
+                      {b.label}
+                    </h2>
+                    <span className="text-sm tabular text-muted-foreground">
+                      {money(sums[b.id], plan.currency)}
+                      {plan.salary > 0 && <> · {Math.round((sums[b.id] / plan.salary) * 100)}%</>}
+                    </span>
+                  </div>
+                  <ul className="divide-y overflow-hidden rounded-2xl bg-card">
+                    <AnimatePresence initial={false}>
+                      {items.map((item) => (
+                        <ItemRow
+                          key={item.id}
+                          item={item}
+                          currency={plan.currency}
+                          readOnly={readOnly}
+                          onToggle={() => update((p) => ({ ...p, items: p.items.map((i) => (i.id === item.id ? { ...i, paid: !i.paid } : i)) }))}
+                          onEdit={() => openEdit(item)}
+                          onDelete={() => deleteItem(item.id)}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
 
-          <ul className="mt-4 space-y-2">
-            <AnimatePresence mode="popLayout" initial={false}>
-            {visible.map((item, idx) => (
-              <ItemRow
-                key={item.id}
-                index={idx}
-                item={item}
-                currency={plan.currency}
-                readOnly={readOnly}
-                onToggle={() => update((p) => ({ ...p, items: p.items.map((i) => (i.id === item.id ? { ...i, paid: !i.paid } : i)) }))}
-                onEdit={() => openEdit(item)}
-                onDelete={() => deleteItem(item.id)}
-              />
-            ))}
-            </AnimatePresence>
-          </ul>
-
-          {visible.length > 0 && !readOnly && (
-            <p className="mt-3 text-center text-xs text-muted-foreground">Swipe right to mark paid · swipe left to delete</p>
+          {plan.items.length === 0 && (
+            <p className="mt-12 text-center text-sm text-muted-foreground">Nothing planned yet.{!readOnly && " Tap + to start."}</p>
           )}
-
-          {visible.length === 0 && (
-            <p className="mt-10 text-center text-sm text-muted-foreground">
-              {filter === "all" ? "Nothing planned yet." : BUCKETS.find((b) => b.id === filter)!.hint}
-              {!readOnly && " Tap + to add."}
-            </p>
+          {plan.items.length > 0 && !readOnly && (
+            <p className="mt-6 text-center text-xs text-muted-foreground/80">Swipe a row right to mark paid, left to delete</p>
           )}
         </>
       )}
 
-      <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 26, delay: 0.2 }} className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-background via-background/90 to-transparent px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-8">
+      <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 26, delay: 0.2 }} className="fixed inset-x-0 bottom-0 z-40 pointer-events-none px-4 pb-[max(1rem,env(safe-area-inset-bottom))] [&>div>*]:pointer-events-auto">
         <div className="mx-auto flex max-w-lg gap-3">
           {readOnly ? (
             <>
@@ -175,8 +171,8 @@ export default function App() {
             </>
           ) : (
             plan.salary > 0 && (
-              <Button variant="accent" size="lg" className="w-full shadow-lg" onClick={openNew}>
-                <Plus className="size-5" /> Add expense
+              <Button size="icon" className="ml-auto size-14 shadow-xl" onClick={openNew} aria-label="Add expense">
+                <Plus className="size-6" />
               </Button>
             )
           )}
@@ -187,7 +183,7 @@ export default function App() {
         open={itemOpen}
         onOpenChange={setItemOpen}
         item={editing}
-        defaultBucket={filter === "all" ? "needs" : filter}
+        defaultBucket="needs"
         currency={plan.currency}
         onSave={(item) =>
           update((p) => ({

@@ -24,6 +24,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [bucket, setBucket] = useState<BucketId>(defaultBucket);
+  const [picking, setPicking] = useState(false);
   const [icon, setIcon] = useState<string | null>(null); // null = auto from name
 
   useEffect(() => {
@@ -32,9 +33,11 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
     setAmount(item ? String(item.amount) : "");
     setBucket(item?.bucket ?? defaultBucket);
     setIcon(item?.icon ?? null);
+    setPicking(false);
   }, [open, item, defaultBucket]);
 
   const shownIcon = icon ?? suggestIcon(name, bucket);
+  const SelectedIcon = ICONS[shownIcon].icon;
   const valid = name.trim().length > 0 && Number(amount) > 0;
 
   return (
@@ -59,7 +62,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
           </div>
           <div className="space-y-2">
             <Label>Bucket</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
               {BUCKETS.map((b) => (
                 <button
                   key={b.id}
@@ -67,37 +70,47 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, o
                   onClick={() => setBucket(b.id)}
                   aria-pressed={bucket === b.id}
                   className={cn(
-                    "rounded-xl border-2 bg-card px-2 py-3 text-center outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                    bucket === b.id ? "text-foreground" : "border-transparent text-muted-foreground",
+                    "flex h-10 items-center justify-center gap-2 rounded-full text-sm font-semibold outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    bucket === b.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
                   )}
-                  style={bucket === b.id ? { borderColor: `var(--${b.id})` } : undefined}
                 >
-                  <div className="text-xl">{b.emoji}</div>
-                  <div className="text-sm font-semibold">{b.label}</div>
+                  <span className="size-2 rounded-full" style={{ background: `var(--${b.id})` }} />
+                  {b.label}
                 </button>
               ))}
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Icon</Label>
-            <div className="grid grid-cols-6 gap-2">
-              {Object.entries(ICONS).map(([key, v]) => (
-                <button
-                  key={key}
-                  type="button"
-                  title={v.label}
-                  aria-label={v.label}
-                  aria-pressed={shownIcon === key}
-                  onClick={() => setIcon(key)}
-                  className={cn(
-                    "grid aspect-square place-items-center rounded-xl border-2 bg-card outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                    shownIcon === key ? "border-primary text-primary" : "border-transparent text-muted-foreground",
-                  )}
-                >
-                  <v.icon className="size-5" />
-                </button>
-              ))}
-            </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => setPicking(!picking)}
+              className="flex items-center gap-3 rounded-full text-sm font-medium text-muted-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
+              <span className="grid size-10 place-items-center rounded-full bg-muted text-foreground">
+                <SelectedIcon className="size-5" />
+              </span>
+              {picking ? "Hide icons" : "Change icon"}
+            </button>
+            {picking && (
+              <div className="mt-3 grid grid-cols-6 gap-2">
+                {Object.entries(ICONS).map(([key, v]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    title={v.label}
+                    aria-label={v.label}
+                    aria-pressed={shownIcon === key}
+                    onClick={() => { setIcon(key); setPicking(false); }}
+                    className={cn(
+                      "grid aspect-square place-items-center rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                      shownIcon === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    <v.icon className="size-5" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-3 pt-1">
             {item && (
