@@ -64,8 +64,8 @@ export function ItemRow({ item, currency, readOnly, onToggle, onEdit, onDelete }
           disabled={readOnly}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
         >
-          <span className="grid size-10 shrink-0 place-items-center rounded-full" style={{ background: `color-mix(in oklch, var(--${item.bucket}) 14%, transparent)` }}>
-            <Icon className="size-[18px]" style={{ color: `var(--${item.bucket})` }} />
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted" >
+            <Icon className="size-[18px]" />
           </span>
           <span className={cn("min-w-0 flex-1 truncate font-medium", item.paid && "text-muted-foreground line-through")}>{item.name}</span>
           <span className={cn("font-semibold tabular", item.paid && "text-muted-foreground")}>{money(item.amount, currency)}</span>

@@ -89,7 +89,7 @@ function Expenses({ plan }: { plan: Plan }) {
         return (
           <motion.li key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, ...SPRING }}>
             <div className="flex items-center gap-2 text-sm">
-              <Icon className="size-4" style={{ color: `var(--${item.bucket})` }} />
+              <Icon className="size-4 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>
               <span className="tabular font-semibold">{money(item.amount, plan.currency)}</span>
               <span className="w-10 text-right text-xs tabular text-muted-foreground">

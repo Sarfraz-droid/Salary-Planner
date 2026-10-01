@@ -25,8 +25,7 @@ export function ShareSheet({ open, onOpenChange, plan }: { open: boolean; onOpen
 
   async function saveImage() {
     if (!cardRef.current) return;
-    const bg = getComputedStyle(document.documentElement).getPropertyValue("--primary");
-    const png = await toPng(cardRef.current, { pixelRatio: 3, cacheBust: true, backgroundColor: bg || undefined });
+        const png = await toPng(cardRef.current, { pixelRatio: 3, cacheBust: true, backgroundColor: "#0a0a0a" });
     const a = document.createElement("a");
     a.href = png;
     a.download = `${plan.name.replace(/\W+/g, "-").toLowerCase() || "budget"}.png`;

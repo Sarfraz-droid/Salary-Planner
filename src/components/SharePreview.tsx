@@ -14,7 +14,8 @@ export const SharePreview = forwardRef<HTMLDivElement, { plan: Plan }>(function 
   const top = [...plan.items].sort((a, b) => b.amount - a.amount).slice(0, 5);
 
   return (
-    <div ref={ref} className="w-full rounded-[1.5rem] bg-primary p-5 text-primary-foreground">
+    <div ref={ref} className="w-full rounded-[1.5rem] bg-neutral-950 p-5 text-white"
+      style={{ "--needs": "#ffffff", "--wants": "#9a9a9a", "--savings": "#4d4d4d" } as React.CSSProperties}>
       <div className="flex items-center gap-2 text-sm font-semibold opacity-90">
         <Wallet className="size-4" /> Gareeb Budget
       </div>
@@ -22,7 +23,7 @@ export const SharePreview = forwardRef<HTMLDivElement, { plan: Plan }>(function 
       <p className="mt-0.5 text-sm opacity-80">Monthly salary</p>
       <p className="font-display text-4xl font-bold tabular">{money(plan.salary, plan.currency)}</p>
 
-      <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-white/20">
+      <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-white/15">
         {BUCKETS.map((b) => (
           <div key={b.id} style={{ width: `${(t.byBucket[b.id] / base) * 100}%`, background: `var(--${b.id})` }} />
         ))}
