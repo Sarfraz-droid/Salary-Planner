@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Pencil } from "lucide-react";
+import { BarChart3, Pencil } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { AnimatedMoney } from "@/components/AnimatedMoney";
 import { Donut } from "@/components/Donut";
@@ -8,7 +8,7 @@ import { totals } from "@/lib/plan";
 import { BUCKETS, type Plan } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
+export function Summary({ plan, onEdit, onInsights }: { plan: Plan; onEdit?: () => void; onInsights: () => void }) {
   const t = totals(plan);
   const over = t.left < 0;
   return (
@@ -18,17 +18,27 @@ export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
           <p className="text-sm text-muted-foreground">Monthly salary</p>
           <p className="font-display text-3xl font-bold tabular"><AnimatedMoney value={plan.salary} currency={plan.currency} /></p>
         </div>
-        {onEdit && (
+        <div className="flex gap-2">
           <button
-            onClick={onEdit}
-            className="flex h-9 items-center gap-1.5 rounded-full bg-secondary px-3.5 text-sm font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            onClick={onInsights}
+            className="flex h-9 items-center gap-1.5 rounded-full bg-primary px-3.5 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
           >
-            <Pencil className="size-3.5" /> Edit
+            <BarChart3 className="size-3.5" /> Insights
           </button>
-        )}
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              aria-label="Edit salary"
+              className="grid size-9 place-items-center rounded-full bg-secondary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            >
+              <Pencil className="size-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-4 flex items-center gap-4">
+        <motion.button onClick={onInsights} whileTap={{ scale: 0.95 }} aria-label="Open insights" className="rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">
         <Donut salary={plan.salary} byBucket={t.byBucket}>
           <div>
             <p className="text-xs text-muted-foreground">{over ? "Over by" : "Left"}</p>
@@ -42,6 +52,7 @@ export function Summary({ plan, onEdit }: { plan: Plan; onEdit?: () => void }) {
             </p>
           </div>
         </Donut>
+        </motion.button>
 
         <ul className="flex-1 space-y-3">
           {BUCKETS.map((b) => {

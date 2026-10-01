@@ -3,6 +3,8 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { Eye, Moon, Plus, Share2, Sun, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Analytics } from "@/components/Analytics";
+import { Toast } from "@/components/Toast";
 import { ItemRow } from "@/components/ItemRow";
 import { ItemSheet } from "@/components/ItemSheet";
 import { SetupSheet } from "@/components/SetupSheet";
@@ -26,6 +28,8 @@ export default function App() {
   const [itemOpen, setItemOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [undo, setUndo] = useState<{ item: Item; index: number } | null>(null);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
@@ -62,6 +66,19 @@ export default function App() {
     () => plan.items.filter((i) => filter === "all" || i.bucket === filter),
     [plan.items, filter],
   );
+
+  function deleteItem(id: string) {
+    const index = mine.items.findIndex((i) => i.id === id);
+    if (index < 0) return;
+    setUndo({ item: mine.items[index], index });
+    update((p) => ({ ...p, items: p.items.filter((i) => i.id !== id) }));
+  }
+  function undoDelete() {
+    if (!undo) return;
+    const { item, index } = undo;
+    update((p) => ({ ...p, items: [...p.items.slice(0, index), item, ...p.items.slice(index)] }));
+    setUndo(null);
+  }
 
   const openNew = () => { setEditing(null); setItemOpen(true); };
   const openEdit = (i: Item) => { setEditing(i); setItemOpen(true); };
@@ -107,7 +124,7 @@ export default function App() {
       ) : (
         <>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <Summary plan={plan} onEdit={readOnly ? undefined : () => setSetupOpen(true)} />
+          <Summary plan={plan} onEdit={readOnly ? undefined : () => setSetupOpen(true)} onInsights={() => setInsightsOpen(true)} />
           </motion.div>
 
           <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)} className="mt-6">
@@ -130,10 +147,15 @@ export default function App() {
                 readOnly={readOnly}
                 onToggle={() => update((p) => ({ ...p, items: p.items.map((i) => (i.id === item.id ? { ...i, paid: !i.paid } : i)) }))}
                 onEdit={() => openEdit(item)}
+                onDelete={() => deleteItem(item.id)}
               />
             ))}
             </AnimatePresence>
           </ul>
+
+          {visible.length > 0 && !readOnly && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">Swipe right to mark paid · swipe left to delete</p>
+          )}
 
           {visible.length === 0 && (
             <p className="mt-10 text-center text-sm text-muted-foreground">
@@ -173,7 +195,7 @@ export default function App() {
             items: p.items.some((i) => i.id === item.id) ? p.items.map((i) => (i.id === item.id ? item : i)) : [...p.items, item],
           }))
         }
-        onDelete={(id) => update((p) => ({ ...p, items: p.items.filter((i) => i.id !== id) }))}
+        onDelete={deleteItem}
       />
       <SetupSheet
         open={setupOpen}
@@ -183,6 +205,8 @@ export default function App() {
           setPlan((p) => (useStarter ? { ...starterPlan(v.salary, v.currency), name: v.name } : { ...p, ...v }))
         }
       />
+      <Analytics open={insightsOpen} onOpenChange={setInsightsOpen} plan={plan} />
+      <Toast message={undo ? `Deleted “${undo.item.name}”` : null} onUndo={undoDelete} onDone={() => setUndo(null)} />
       <ShareSheet open={shareOpen} onOpenChange={setShareOpen} plan={mine} />
     </div>
     </MotionConfig>
