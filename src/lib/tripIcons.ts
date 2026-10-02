@@ -3,6 +3,7 @@ import {
   Mountain, PartyPopper, Plane, ShoppingBag, Shield, Ship, Smartphone, Snowflake, Tag, Tent, Ticket,
   TrainFront, TreePalm, Utensils, Waves, type LucideIcon,
 } from "lucide-react";
+import { hasKeyword } from "./match";
 import type { TripCat } from "./types";
 
 interface Def { icon: LucideIcon; label: string; keywords: string[] }
@@ -41,8 +42,8 @@ export const COST_ICONS: Record<string, Def & { category: TripCat }> = {
   cab: { icon: Car, label: "Cab / Car", category: "transport", keywords: ["cab", "taxi", "uber", "ola", "car", "rental", "self-drive", "auto"] },
   fuel: { icon: Fuel, label: "Fuel / Toll", category: "transport", keywords: ["fuel", "petrol", "diesel", "toll", "parking"] },
   ferry: { icon: Ship, label: "Ferry", category: "transport", keywords: ["ferry", "boat", "cruise"] },
-  food: { icon: Utensils, label: "Meals", category: "food", keywords: ["food", "meal", "dinner", "lunch", "breakfast", "restaurant", "eat", "buffet"] },
-  cafe: { icon: Coffee, label: "Cafe / Snacks", category: "food", keywords: ["cafe", "coffee", "snack", "drinks", "chai", "bar"] },
+  food: { icon: Utensils, label: "Meals", category: "food", keywords: ["food", "restaurant", "eat", "buffet", "swiggy", "zomato", "chole", "bhature", "bhatura", "biryani", "dosa", "idli", "thali", "paratha", "paneer", "roti", "naan", "samosa", "pizza", "burger", "momo", "maggi", "pasta", "sandwich", "dhaba", "tiffin", "lassi", "kebab", "tikka", "curry", "noodle", "fries", "pav", "vada", "poha", "upma", "chaat", "golgappa", "pani puri", "dessert", "juice", "shake", "breakfast", "lunch", "dinner", "meal", "canteen", "mess", "snack", "dal", "rajma", "khichdi", "chinese", "fast food", "takeaway", "kfc", "dominos", "mcdonald", "subway", "starbucks"] },
+  cafe: { icon: Coffee, label: "Cafe / Drinks", category: "food", keywords: ["cafe", "coffee", "drinks", "chai", "tea", "bar", "beer", "bakery", "sweets", "mithai", "ice cream"] },
   ticket: { icon: Ticket, label: "Entry tickets", category: "activities", keywords: ["ticket", "entry", "museum", "park", "show", "pass"] },
   activity: { icon: Waves, label: "Activity", category: "activities", keywords: ["scuba", "dive", "rafting", "paraglid", "trek", "activity", "tour", "safari", "surf", "sport"] },
   photo: { icon: Camera, label: "Sightseeing", category: "activities", keywords: ["photo", "sightsee", "guide", "camera"] },
@@ -57,7 +58,7 @@ export const COST_ICONS: Record<string, Def & { category: TripCat }> = {
 
 export function matchCost(name: string): { icon: string; category: TripCat } | null {
   const n = name.toLowerCase();
-  for (const [key, d] of Object.entries(COST_ICONS)) if (d.keywords.some((k) => n.includes(k))) return { icon: key, category: d.category };
+  for (const [key, d] of Object.entries(COST_ICONS)) if (d.keywords.some((k) => hasKeyword(n, k))) return { icon: key, category: d.category };
   return null;
 }
 export function suggestCost(name: string, fallback: TripCat): { icon: string; category: TripCat } {

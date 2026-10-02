@@ -145,7 +145,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
   const [mode, setMode] = useState<"manual" | "smart">("manual");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<TripCat>("stay");
+  const [category, setCategory] = useState<TripCat>("other");
   const [catTouched, setCatTouched] = useState(false);
   const [icon, setIcon] = useState<string | null>(null); // null = auto
   const [picking, setPicking] = useState(false);
@@ -157,7 +157,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
     setPicking(false);
     setName(item?.name ?? "");
     setAmount(item ? String(item.amount) : "");
-    setCategory(item?.category ?? "stay");
+    setCategory(item?.category ?? "other");
     setCatTouched(!!item);
     setIcon(item?.icon ?? null);
   }, [open, item]);
@@ -192,7 +192,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
                     placeholder='e.g. "hotel 6000"'
                     examples={["hotel 6000", "train 1.2k", "scuba 3500", "dinner 800"]}
                     onFill={async ({ name: n, amount: a }) => {
-                      const r = await smartCost(n, category);
+                      const r = await smartCost(n, "other");
                       if (n) setName(n);
                       setIcon(r.icon);
                       setCategory(r.category);

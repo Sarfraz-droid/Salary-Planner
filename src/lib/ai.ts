@@ -79,8 +79,8 @@ async function nearest(text: string, labels: { key: string; text: string }[]): P
   }
 }
 
-const expenseLabels = Object.entries(ICONS).filter(([k]) => k !== "other").map(([key, v]) => ({ key, text: `${v.label}: ${v.keywords.join(", ")}` }));
-const costLabels = Object.entries(COST_ICONS).filter(([k]) => k !== "other").map(([key, v]) => ({ key, text: `${v.label} while travelling: ${v.keywords.join(", ")}` }));
+const expenseLabels = Object.entries(ICONS).filter(([k]) => k !== "other").map(([key, v]) => ({ key, text: `${v.label}: ${v.keywords.slice(0, 12).join(", ")}` }));
+const costLabels = Object.entries(COST_ICONS).filter(([k]) => k !== "other").map(([key, v]) => ({ key, text: `${v.label} on a trip: ${v.keywords.slice(0, 12).join(", ")}` }));
 
 /** Pick icon + bucket for an expense name: keywords first, then the local model. */
 export async function smartExpense(name: string, fallback: BucketId): Promise<{ icon: string; bucket: BucketId; by: "keywords" | "ai" | "default" }> {

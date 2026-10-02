@@ -3,13 +3,14 @@ import {
   PiggyBank, Plane, Shield, ShoppingBag, ShoppingCart, Shirt, Smartphone, Tag, TrendingUp,
   Utensils, Wifi, Zap, type LucideIcon,
 } from "lucide-react";
+import { hasKeyword } from "./match";
 import type { BucketId } from "./types";
 
 export const ICONS: Record<string, { icon: LucideIcon; label: string; keywords: string[] }> = {
   home: { icon: Home, label: "Rent / Home", keywords: ["rent", "home", "house", "maintenance", "mortgage"] },
-  groceries: { icon: ShoppingCart, label: "Groceries", keywords: ["grocer", "vegetable", "kirana", "milk", "ration"] },
-  food: { icon: Utensils, label: "Eating out", keywords: ["eat", "food", "restaurant", "swiggy", "zomato", "dining"] },
-  coffee: { icon: Coffee, label: "Coffee / Snacks", keywords: ["coffee", "chai", "tea", "snack", "cafe"] },
+  groceries: { icon: ShoppingCart, label: "Groceries", keywords: ["grocer", "vegetable", "kirana", "milk", "ration", "fruit", "atta", "oil", "supermarket", "bigbasket", "blinkit", "zepto", "instamart", "dmart"] },
+  food: { icon: Utensils, label: "Eating out", keywords: ["eat", "food", "restaurant", "swiggy", "zomato", "dining", "chole", "bhature", "bhatura", "biryani", "dosa", "idli", "thali", "paratha", "paneer", "roti", "naan", "samosa", "pizza", "burger", "momo", "maggi", "pasta", "sandwich", "dhaba", "tiffin", "lassi", "kebab", "tikka", "curry", "noodle", "fries", "pav", "vada", "poha", "upma", "chaat", "golgappa", "pani puri", "dessert", "juice", "shake", "breakfast", "lunch", "dinner", "meal", "canteen", "mess", "snack", "dal", "rajma", "khichdi", "chinese", "fast food", "takeaway", "kfc", "dominos", "mcdonald", "subway", "starbucks"] },
+  coffee: { icon: Coffee, label: "Coffee / Snacks", keywords: ["coffee", "chai", "tea", "cafe", "bakery", "sweets", "mithai", "ice cream", "chocolate"] },
   bills: { icon: Zap, label: "Utilities", keywords: ["bill", "electric", "light", "gas", "water", "utilit"] },
   internet: { icon: Wifi, label: "Internet", keywords: ["wifi", "internet", "broadband"] },
   phone: { icon: Smartphone, label: "Phone", keywords: ["phone", "mobile", "recharge", "sim"] },
@@ -37,7 +38,7 @@ const BUCKET_DEFAULT: Record<BucketId, string> = { needs: "home", wants: "fun", 
 export function matchIcon(name: string): string | null {
   const n = name.toLowerCase();
   for (const [key, v] of Object.entries(ICONS)) {
-    if (v.keywords.some((k) => n.includes(k))) return key;
+    if (v.keywords.some((k) => hasKeyword(n, k))) return key;
   }
   return null;
 }
