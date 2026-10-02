@@ -3,6 +3,7 @@ import {
   Mountain, PartyPopper, Plane, ShoppingBag, Shield, Ship, Smartphone, Snowflake, Tag, Tent, Ticket,
   TrainFront, TreePalm, Utensils, Waves, type LucideIcon,
 } from "lucide-react";
+import { recall } from "./learned";
 import { hasKeyword } from "./match";
 import type { TripCat } from "./types";
 
@@ -56,13 +57,17 @@ export const COST_ICONS: Record<string, Def & { category: TripCat }> = {
   other: { icon: Tag, label: "Other", category: "other", keywords: [] },
 };
 
+const CAT_ICON: Record<TripCat, string> = { stay: "hotel", food: "food", transport: "cab", activities: "ticket", shopping: "shopping", other: "other" };
+
 export function matchCost(name: string): { icon: string; category: TripCat } | null {
+  const learned = recall("cost", name);
+  if (learned) return { icon: learned.icon, category: learned.group as TripCat };
   const n = name.toLowerCase();
   for (const [key, d] of Object.entries(COST_ICONS)) if (d.keywords.some((k) => hasKeyword(n, k))) return { icon: key, category: d.category };
   return null;
 }
 export function suggestCost(name: string, fallback: TripCat): { icon: string; category: TripCat } {
-  return matchCost(name) ?? { icon: "other", category: fallback };
+  return matchCost(name) ?? { icon: CAT_ICON[fallback], category: fallback };
 }
 export const getCostIcon = (key: string | undefined, name: string, category: TripCat) =>
   COST_ICONS[key && COST_ICONS[key] ? key : suggestCost(name, category).icon].icon;

@@ -1,7 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Cpu, Loader2, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { aiWanted, disableAi, enableAi, getAiStatus, subscribeAi } from "@/lib/ai";
+import { aiWanted, chosenModel, disableAi, enableAi, getAiStatus, MODELS, subscribeAi } from "@/lib/ai";
+import { forgetAll, readMemory } from "@/lib/learned";
 import { parseQuick } from "@/lib/parse";
 
 /** Toggle between the manual form and the smart (text) entry. */
@@ -28,32 +29,60 @@ export function ModeSwitch({ mode, onChange }: { mode: "manual" | "smart"; onCha
 /** Status + opt-in for the on-device model. Lives in its own card, apart from the inputs. */
 function AiCard() {
   const ai = useSyncExternalStore(subscribeAi, getAiStatus);
+  const [pick, setPick] = useState<string>(chosenModel());
+  const [learned, setLearned] = useState(() => readMemory().length);
   // Re-load on later visits if the user opted in (cached, so quick).
   useEffect(() => { if (aiWanted() && getAiStatus().state === "off") enableAi().catch(() => {}); }, []);
 
+  const model = MODELS.find((m) => m.id === (ai.state === "off" || ai.state === "error" ? pick : ai.model)) ?? MODELS[0];
+  const idle = ai.state === "off" || ai.state === "error";
+
   return (
-    <div className="flex items-start gap-3 rounded-2xl bg-card p-4">
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted"><Cpu className="size-5" /></span>
-      <div className="min-w-0 flex-1 text-sm">
-        <p className="font-semibold">On-device AI</p>
-        {ai.state === "off" && <p className="mt-0.5 text-muted-foreground">Optional. Understands names keywords miss, like “dentist” or “biryani”. Downloads ~25 MB once; runs on your phone.</p>}
-        {ai.state === "loading" && <p className="mt-0.5 text-muted-foreground">Downloading… {ai.progress}%</p>}
-        {ai.state === "ready" && <p className="mt-0.5 text-muted-foreground">Ready. Nothing leaves your device.</p>}
-        {ai.state === "error" && <p className="mt-0.5 text-muted-foreground">Couldn't load (offline?). Keyword matching still works.</p>}
-        {ai.state === "loading" && (
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-foreground transition-all" style={{ width: `${ai.progress}%` }} /></div>
+    <div className="space-y-4 rounded-2xl bg-card p-4">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-muted"><Cpu className="size-5" /></span>
+        <div className="min-w-0 flex-1 text-sm">
+          <p className="font-semibold">On-device AI</p>
+          {ai.state === "off" && <p className="mt-0.5 text-muted-foreground">Works out what a name means, like “chole bhature” is food. Runs on your phone; nothing is uploaded.</p>}
+          {ai.state === "loading" && <p className="mt-0.5 text-muted-foreground">Downloading {model.label.toLowerCase()} model… {ai.progress}%</p>}
+          {ai.state === "ready" && <p className="mt-0.5 text-muted-foreground">Ready · {model.label} model. It also learns from what you save.</p>}
+          {ai.state === "error" && <p className="mt-0.5 text-muted-foreground">Couldn't load (offline?). Keywords and what you've taught it still work.</p>}
+        </div>
+        {ai.state === "ready" && (
+          <button type="button" onClick={disableAi} className="h-9 shrink-0 rounded-full bg-secondary px-4 text-sm font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">Turn off</button>
         )}
       </div>
-      {(ai.state === "off" || ai.state === "error") && (
-        <button type="button" onClick={() => enableAi().catch(() => {})} className="h-9 shrink-0 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">
-          Enable
-        </button>
+
+      {ai.state === "loading" && (
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-foreground transition-all" style={{ width: `${ai.progress}%` }} /></div>
       )}
-      {ai.state === "ready" && (
-        <button type="button" onClick={disableAi} className="h-9 shrink-0 rounded-full bg-secondary px-4 text-sm font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">
-          Turn off
-        </button>
+
+      {idle && (
+        <>
+          <div className="grid gap-2" role="radiogroup" aria-label="Model">
+            {MODELS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                role="radio"
+                aria-checked={pick === m.id}
+                onClick={() => setPick(m.id)}
+                className={`flex items-center justify-between gap-3 rounded-xl border-2 px-3.5 py-3 text-left text-sm outline-none transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/40 ${pick === m.id ? "border-primary" : "border-transparent bg-muted"}`}
+              >
+                <span><span className="block font-semibold">{m.label} <span className="font-normal text-muted-foreground">· {m.size}</span></span><span className="text-muted-foreground">{m.note}</span></span>
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => enableAi(pick).catch(() => {})} className="h-11 w-full rounded-full bg-primary font-semibold text-primary-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">
+            Download &amp; enable
+          </button>
+        </>
       )}
+
+      <p className="border-t pt-3 text-xs text-muted-foreground">
+        Learned from you: <b className="text-foreground">{learned}</b> {learned === 1 ? "item" : "items"}.{" "}
+        {learned > 0 && <button type="button" className="underline" onClick={() => { forgetAll(); setLearned(0); }}>Forget</button>}
+      </p>
     </div>
   );
 }

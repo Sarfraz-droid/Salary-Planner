@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetSection, SheetStep } from "@/components/ui/sheet";
-import { smartCost } from "@/lib/ai";
+import { smartCost, SOURCE_LABEL } from "@/lib/ai";
+import { remember } from "@/lib/learned";
 import { uid } from "@/lib/plan";
 import { fmtRange, TRIP_CATS } from "@/lib/trip";
 import { COST_ICONS, COST_PRESETS, suggestCost, suggestTripIcon, TRIP_ICONS } from "@/lib/tripIcons";
@@ -143,6 +144,7 @@ interface TripItemSheetProps {
 export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDelete }: TripItemSheetProps) {
   const [step, setStep] = useState(0); // 0 = what, 1 = how much
   const [mode, setMode] = useState<"manual" | "smart">("manual");
+  const [via, setVia] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<TripCat>("other");
@@ -154,6 +156,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
     if (!open) return;
     setStep(item ? 1 : 0);
     setMode("manual");
+    setVia(null);
     setPicking(false);
     setName(item?.name ?? "");
     setAmount(item ? String(item.amount) : "");
@@ -175,6 +178,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
 
   function submit() {
     if (!valid) return;
+    remember("cost", name, shownIcon, category);
     onSave({ id: item?.id ?? uid(), name: name.trim(), amount: Number(amount), category, icon: shownIcon });
     onOpenChange(false);
   }
@@ -197,6 +201,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
                       setIcon(r.icon);
                       setCategory(r.category);
                       setCatTouched(true);
+                      setVia(SOURCE_LABEL[r.by]);
                       if (a) { setAmount(String(a)); setStep(1); } else setMode("manual");
                     }}
                   />
@@ -252,7 +257,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
               </SheetStep>
             ) : (
               <SheetStep stepKey="amount">
-                <StepSummary icon={COST_ICONS[shownIcon].icon} title={name || "Untitled"} subtitle={catLabel} onEdit={() => setStep(0)} />
+                <StepSummary icon={COST_ICONS[shownIcon].icon} title={name || "Untitled"} subtitle={via ? `${catLabel} · ${via}` : catLabel} onEdit={() => setStep(0)} />
                 <AmountPicker value={amount} onChange={setAmount} currency={currency} steps={[500, 1000, 2000, 5000, 10000]} />
               </SheetStep>
             )}

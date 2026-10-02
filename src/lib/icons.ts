@@ -3,6 +3,7 @@ import {
   PiggyBank, Plane, Shield, ShoppingBag, ShoppingCart, Shirt, Smartphone, Tag, TrendingUp,
   Utensils, Wifi, Zap, type LucideIcon,
 } from "lucide-react";
+import { recall } from "./learned";
 import { hasKeyword } from "./match";
 import type { BucketId } from "./types";
 
@@ -36,6 +37,8 @@ const BUCKET_DEFAULT: Record<BucketId, string> = { needs: "home", wants: "fun", 
 
 /** Keyword match only: null when nothing recognises the name. */
 export function matchIcon(name: string): string | null {
+  const learned = recall("expense", name);
+  if (learned) return learned.icon;
   const n = name.toLowerCase();
   for (const [key, v] of Object.entries(ICONS)) {
     if (v.keywords.some((k) => hasKeyword(n, k))) return key;

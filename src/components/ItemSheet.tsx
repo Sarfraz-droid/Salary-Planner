@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { AmountPicker } from "@/components/AmountPicker";
 import { ModeSwitch, SmartAdd } from "@/components/SmartAdd";
 import { StepSummary } from "@/components/StepSummary";
-import { smartExpense } from "@/lib/ai";
+import { smartExpense, SOURCE_LABEL } from "@/lib/ai";
+import { remember } from "@/lib/learned";
 import { PRESETS } from "@/lib/presets";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -29,6 +30,7 @@ interface Props {
 export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, auto, onSave, onDelete }: Props) {
   const [step, setStep] = useState(0); // 0 = what, 1 = how much
   const [mode, setMode] = useState<"manual" | "smart">("manual");
+  const [via, setVia] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [bucket, setBucket] = useState<BucketId>(defaultBucket);
@@ -40,6 +42,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
     if (!open) return;
     setStep(item ? 1 : 0);
     setMode("manual");
+    setVia(null);
     setName(item?.name ?? "");
     setAmount(item ? String(item.amount) : "");
     setBucket(item?.bucket ?? defaultBucket);
@@ -55,6 +58,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
 
   function submit() {
     if (!valid) return;
+    remember("expense", name, shownIcon, bucket);
     onSave({ id: item?.id ?? uid(), name: name.trim(), amount: Number(amount), bucket, paid: item?.paid ?? false, icon: shownIcon, locked: auto ? locked : item?.locked });
     onOpenChange(false);
   }
@@ -76,6 +80,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
                       if (n) setName(n);
                       setIcon(r.icon);
                       setBucket(r.bucket);
+                      setVia(SOURCE_LABEL[r.by]);
                       if (a) { setAmount(String(a)); setStep(1); } else setMode("manual");
                     }}
                   />
@@ -131,7 +136,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
               </SheetStep>
             ) : (
               <SheetStep stepKey="amount">
-                <StepSummary icon={ICONS[shownIcon].icon} title={name || "Untitled"} subtitle={bucketLabel} onEdit={() => setStep(0)} />
+                <StepSummary icon={ICONS[shownIcon].icon} title={name || "Untitled"} subtitle={via ? `${bucketLabel} · ${via}` : bucketLabel} onEdit={() => setStep(0)} />
                 <AmountPicker value={amount} onChange={setAmount} currency={currency} />
                 {auto && (
                   <label className="flex items-center justify-between gap-4 rounded-2xl bg-card p-4">
