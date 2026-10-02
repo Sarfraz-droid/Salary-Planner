@@ -6,7 +6,7 @@
  *   3. keyword matching, only as a fallback when the model isn't loaded
  * Nothing about your budget leaves the device; model files are downloaded once and cached.
  */
-import { ICON_BUCKET, matchIcon, suggestIcon } from "./icons";
+import { ICONS, ICON_BUCKET, matchIcon, suggestIcon } from "./icons";
 import { norm, readMemory, recall, type Kind } from "./learned";
 import { COST_PROTOS, EXPENSE_PROTOS } from "./protos";
 import { COST_ICONS, matchCost, suggestCost } from "./tripIcons";
@@ -92,8 +92,26 @@ const dot = (a: number[], b: number[]) => a.reduce((n, v, i) => n + v * b[i], 0)
 
 type Source = "learned" | "ai" | "keywords" | "default";
 
+/** For the "Test it" box: what the model thinks, with scores, and the real error if it fails. */
+export async function diagnose(kind: Kind, text: string): Promise<{ rows: { label: string; score: number }[]; error?: string }> {
+  if (status.state !== "ready") return { rows: [], error: "Model isn't loaded yet." };
+  try {
+    const protos = kind === "expense" ? EXPENSE_PROTOS : COST_PROTOS;
+    const flat = Object.keys(protos).flatMap((k) => protos[k].map((t) => ({ k, t })));
+    const [q, ...vecs] = await embed([norm(text), ...flat.map((f) => f.t)]);
+    const score: Record<string, number> = {};
+    vecs.forEach((v, i) => { const s = dot(q, v); const k = flat[i].k; if (s > (score[k] ?? -1)) score[k] = s; });
+    const defs = kind === "expense" ? ICONS : COST_ICONS;
+    const rows = Object.entries(score).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => ({ label: defs[k]?.label ?? k, score: v }));
+    return { rows };
+  } catch (e) {
+    return { rows: [], error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 /** Meaning-based lookup: closest saved item, else closest category description. */
 async function infer(kind: Kind, name: string, protos: Record<string, string[]>): Promise<{ icon: string; group?: string; by: "learned" | "ai" } | null> {
+  if (status.state === "loading" && embedder) await embedder.catch(() => {}); // model still warming up: wait for it
   if (status.state !== "ready" || !name.trim()) return null;
   try {
     const mem = readMemory().filter((m) => m.kind === kind);

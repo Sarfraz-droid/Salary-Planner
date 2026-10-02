@@ -73,6 +73,7 @@ export function ItemSheet({ open, onOpenChange, item, defaultBucket, currency, a
                 {!item && <ModeSwitch mode={mode} onChange={setMode} />}
                 {!item && mode === "smart" ? (
                   <SmartAdd
+                    kind="expense"
                     placeholder='e.g. "swiggy 450 dinner"'
                     examples={["swiggy 450 dinner", "rent 15k", "sip 5000", "uber 250"]}
                     onFill={async ({ name: n, amount: a }) => {

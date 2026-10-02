@@ -1,7 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Cpu, Loader2, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { aiWanted, chosenModel, disableAi, enableAi, getAiStatus, MODELS, subscribeAi } from "@/lib/ai";
+import { aiWanted, chosenModel, diagnose, disableAi, enableAi, getAiStatus, MODELS, subscribeAi } from "@/lib/ai";
+import type { Kind } from "@/lib/learned";
 import { forgetAll, readMemory } from "@/lib/learned";
 import { parseQuick } from "@/lib/parse";
 
@@ -27,7 +28,7 @@ export function ModeSwitch({ mode, onChange }: { mode: "manual" | "smart"; onCha
 }
 
 /** Status + opt-in for the on-device model. Lives in its own card, apart from the inputs. */
-function AiCard() {
+function AiCard({ kind }: { kind: Kind }) {
   const ai = useSyncExternalStore(subscribeAi, getAiStatus);
   const [pick, setPick] = useState<string>(chosenModel());
   const [learned, setLearned] = useState(() => readMemory().length);
@@ -36,6 +37,9 @@ function AiCard() {
 
   const model = MODELS.find((m) => m.id === (ai.state === "off" || ai.state === "error" ? pick : ai.model)) ?? MODELS[0];
   const idle = ai.state === "off" || ai.state === "error";
+  const [probe, setProbe] = useState("");
+  const [result, setResult] = useState<{ rows: { label: string; score: number }[]; error?: string } | null>(null);
+  async function runProbe() { if (probe.trim()) setResult(await diagnose(kind, probe)); }
 
   return (
     <div className="space-y-4 rounded-2xl bg-card p-4">
@@ -79,6 +83,24 @@ function AiCard() {
         </>
       )}
 
+      {ai.state === "ready" && (
+        <div className="space-y-2 border-t pt-3">
+          <p className="text-xs font-semibold">Test it</p>
+          <div className="flex gap-2">
+            <Input value={probe} onChange={(e) => setProbe(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); runProbe(); } }} placeholder="chole bhature" aria-label="Test text" className="h-10 text-sm" />
+            <button type="button" onClick={runProbe} className="h-10 shrink-0 rounded-full bg-secondary px-4 text-sm font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40">Run</button>
+          </div>
+          {result?.error && <p className="text-xs text-destructive">Error: {result.error}</p>}
+          {result && !result.error && (
+            <ul className="space-y-1 text-xs">
+              {result.rows.map((r, i) => (
+                <li key={r.label} className="flex justify-between"><span className={i === 0 ? "font-semibold" : "text-muted-foreground"}>{r.label}</span><span className="tabular text-muted-foreground">{r.score.toFixed(2)}</span></li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <p className="border-t pt-3 text-xs text-muted-foreground">
         Learned from you: <b className="text-foreground">{learned}</b> {learned === 1 ? "item" : "items"}.{" "}
         {learned > 0 && <button type="button" className="underline" onClick={() => { forgetAll(); setLearned(0); }}>Forget</button>}
@@ -88,6 +110,7 @@ function AiCard() {
 }
 
 interface Props {
+  kind: Kind;
   placeholder: string;
   examples: string[];
   /** Resolve a parsed line into form fields (icon, bucket/category…). */
@@ -95,7 +118,7 @@ interface Props {
 }
 
 /** The smart tab: one text box + examples + the AI card. Works with keywords alone. */
-export function SmartAdd({ placeholder, examples, onFill }: Props) {
+export function SmartAdd({ kind, placeholder, examples, onFill }: Props) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -147,7 +170,7 @@ export function SmartAdd({ placeholder, examples, onFill }: Props) {
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Fill it in
         </button>
       </section>
-      <AiCard />
+      <AiCard kind={kind} />
     </div>
   );
 }

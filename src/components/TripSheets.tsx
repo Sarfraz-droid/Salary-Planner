@@ -193,6 +193,7 @@ export function TripItemSheet({ open, onOpenChange, item, currency, onSave, onDe
                 {!item && <ModeSwitch mode={mode} onChange={setMode} />}
                 {!item && mode === "smart" ? (
                   <SmartAdd
+                    kind="cost"
                     placeholder='e.g. "hotel 6000"'
                     examples={["hotel 6000", "train 1.2k", "scuba 3500", "dinner 800"]}
                     onFill={async ({ name: n, amount: a }) => {
